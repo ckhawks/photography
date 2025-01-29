@@ -20,9 +20,9 @@
     "fs": "^0.0.1-security",
     "inter-ui": "^3.19.3",
     "next": "latest",
-    "react": "18.2.0",
+    "react": "^18.2.0",
     "react-bootstrap": "^2.10.8",
-    "react-dom": "18.2.0",
+    "react-dom": "^18.2.0",
     "react-feather": "^2.0.10",
     "react-masonry-css": "^1.0.16",
     "swr": "^2.2.4"

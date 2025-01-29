@@ -7,6 +7,7 @@ export async function PutFileIntoS3(file: File, key: String) {
   const s3Client = getS3Client();
   try {
     // set up our parameters
+    // @ts-ignore
     const uploadParams = {
       Bucket: process.env.AWS_S3_BUCKET, // destination bucket
       Key: key, // what the want the file path to be basically

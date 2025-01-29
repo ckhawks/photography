@@ -1,7 +1,7 @@
 "use client";
 
-import Head from "next/head";
 import React, { useEffect, useState } from "react";
+import Head from "next/head";
 
 import "inter-ui/inter.css";
 import styles from "./page.module.scss";

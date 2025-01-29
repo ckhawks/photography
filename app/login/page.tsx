@@ -1,6 +1,6 @@
 // app/login/page.tsx
 "use client";
-import React from "React";
+import React from "react";
 import { useState } from "react";
 import styles from "../page.module.scss";
 import { useRouter } from "next/navigation";

@@ -1,35 +1,41 @@
-import { GetObjectCommand, GetObjectCommandInput } from "@aws-sdk/client-s3";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 import getS3Client from "../../../../util/s3/GetS3Client";
 
 export async function GET(
   request: Request,
-  { params }: { params: { s3Key: string[] } }
+  context: { params: Promise<{ s3Key?: string | string[] }> } // ✅ `params` must be awaited
 ) {
-  if (params.s3Key.length === 0) {
-    return new NextResponse("Please provide an id.", { status: 404 });
+  const { s3Key } = await context.params; // ✅ Await params before accessing it
+
+  if (!s3Key) {
+    return new NextResponse("Missing S3 key", { status: 400 });
   }
 
-  const objectPath = params.s3Key.join("/");
+  // ✅ Handle both single and catch-all routes
+  const objectPath = Array.isArray(s3Key) ? s3Key.join("/") : s3Key;
+
   try {
     const s3Client = getS3Client();
     const getObjectCommand = new GetObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET,
-      Region: process.env.AWS_S3_REGION,
+      Bucket: process.env.AWS_S3_BUCKET!,
       Key: objectPath,
-    } as GetObjectCommandInput);
+    });
 
     const data = await s3Client.send(getObjectCommand);
+    if (!data.Body) {
+      return new NextResponse("Image not found", { status: 404 });
+    }
 
-    return new NextResponse(data.Body as unknown as Buffer, {
+    return new NextResponse(data.Body as ReadableStream, {
       status: 200,
       headers: {
-        "Content-Type": data.ContentType!,
-        "Cache-Control": "public, max-age=31536000, immutable", // optional, for caching
+        "Content-Type": data.ContentType || "application/octet-stream",
+        "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
   } catch (error) {
-    console.error("Error fetching image from S3: ", error);
-    return new NextResponse("Image not found", { status: 404 });
+    console.error("S3 Fetch Error:", error);
+    return new NextResponse("Error fetching image", { status: 500 });
   }
 }

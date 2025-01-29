@@ -1,11 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import sideBarStyles from "./NavigationSidebar.module.scss";
 import styles from "../app/page.module.scss";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ExternalLink } from "react-feather";
-import { useEffect, useState } from "react";
 
 const CURRENT_YEAR = new Date().getFullYear(); // returns the current year
 
