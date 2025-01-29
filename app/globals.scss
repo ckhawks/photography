@@ -1,0 +1,71 @@
+// @import "bootstrap/dist/css/bootstrap.min.css";
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+:root {
+  --background-color: #ffffff;
+  --full-background-color: #ffffff;
+  --hover-background-color: #f2f2f2;
+
+  --border-color: #ececec;
+  --border-color-hover: #d0d0d0;
+
+  --sub-text-color: #7d7d7d;
+  --mostly-text-color: #3a3a3a;
+  --text-color: #171717;
+  --dark-text-color: #000000;
+
+  --button-primary-bg-color: #000000;
+  --button-primary-bg-color-hover: rgba(0, 0, 0, 0.9);
+  --button-primary-color: #ffffff;
+  --button-secondary-bg-color: #ffffff;
+  --button-secondary-bg-color-hover: #f2f2f2;
+  --button-secondary-color: #171717;
+}
+
+body {
+  margin: 0;
+  // overflow: hidden;
+}
+
+* {
+  font-family: "Inter", sans-serif !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600 !important;
+  line-height: unset;
+  margin: unset;
+  color: var(--text-color);
+}
+
+h1 {
+  font-size: 32px !important;
+}
+
+.external-link {
+  color: #2683ff !important;
+  font-size: 14px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  &:hover {
+    color: #2175e2;
+    background-image: linear-gradient(#0070f3, #0070f3);
+    background-size: 100% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    cursor: pointer;
+  }
+}
+
+a {
+  color: inherit;
+  text-decoration: none !important;
+}

@@ -1,0 +1,25 @@
+.ButtonSwap {
+  font-size: 14px;
+  background-color: white;
+  color: rgb(156, 156, 156);
+  text-decoration: none;
+  align-items: center;
+  padding: 5px 10px;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  border-radius: 5px;
+}
+
+.ButtonSwap:active,
+.ButtonSwap:visited {
+  color: rgb(156, 156, 156);
+}
+
+.ButtonSwap:hover {
+  background-color: rgb(236, 236, 236);
+  color: rgb(116, 116, 116);
+}
+
+.ButtonSwap > svg {
+  margin-right: 6px;
+  margin-bottom: -2px;
+}

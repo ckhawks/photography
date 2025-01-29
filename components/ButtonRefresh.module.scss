@@ -1,0 +1,36 @@
+.ButtonRefresh {
+  font-size: 14px;
+  background-color: white;
+  color: rgb(156, 156, 156);
+  text-decoration: none;
+  align-items: center;
+  /* margin-bottom: 10px; */
+  /* margin-right: auto; */
+  margin-left: auto;
+  padding: 5px 10px;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  border-radius: 5px;
+  justify-self: flex-end;
+}
+
+.ButtonRefresh:active,
+.ButtonRefresh:visited {
+  color: rgb(156, 156, 156);
+}
+
+.ButtonRefresh:hover {
+  background-color: rgb(236, 236, 236);
+  color: rgb(116, 116, 116);
+  cursor: pointer;
+}
+
+.ButtonRefresh > svg {
+  margin-right: 6px;
+  margin-bottom: -2px;
+}
+
+@media screen and (max-width: 1280px) {
+  .ButtonRefresh {
+    margin-left: -5px;
+  }
+}
