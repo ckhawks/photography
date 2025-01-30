@@ -573,7 +573,9 @@
 
 .photo {
   max-width: 90%;
+  width: auto;
   max-height: 80vh;
+  height: auto;
   padding: 1rem;
   box-shadow: 0 0 16px rgba(17, 17, 26, 0.1);
 }
@@ -603,6 +605,11 @@
     color: rgb(143, 143, 143);
     font-size: 14px;
   }
+  // border-radius: 32px;
+  // border: 1px solid rgb(246, 246, 246);
+  // padding: 0.5rem 1rem;
+  // padding-left: 0.5rem;
+  // background-color: white;
 }
 
 .button {

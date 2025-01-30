@@ -51,6 +51,7 @@ const ImageDisplay = (props) => {
           }}
         />
         <div className={styles.photoMetaRow}>
+          <span className={styles.date}>#{props.image.id}</span>
           <LikeButton
             initialLikes={props.image.likes}
             photoId={props.image.id}
@@ -82,6 +83,7 @@ const ImageDisplay = (props) => {
               initialLikes={props.image.likes}
               photoId={props.image.id}
             />
+            <span className={styles.date}>#{props.image.id}</span>
             <span className={styles.date}>
               {formatRelativeTimestamp(props.image.createdAt)}
             </span>

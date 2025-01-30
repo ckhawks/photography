@@ -27,6 +27,9 @@
 
 .navlink {
   // padding: 0.5rem 0rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding-left: 2rem;
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;

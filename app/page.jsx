@@ -13,9 +13,9 @@ import Link from "next/link";
 import { formatRelativeTimestamp } from "../util/date";
 
 export default async function HallOfFame({ searchParams }) {
-  // const params = await searchParams;
-  const currentPage = searchParams.page ? parseInt(searchParams.page, 10) : 1;
-  const view = searchParams.view || "grid";
+  const params = await searchParams;
+  const currentPage = params.page ? parseInt(params.page, 10) : 1;
+  const view = params.view || "grid";
 
   let photos = [];
   let totalPages = 1;
@@ -148,6 +148,7 @@ export default async function HallOfFame({ searchParams }) {
                     alt={photo.originalFilename}
                   />
                   <div className={styles.photoMetaRow}>
+                    <span className={styles.date}>#{photo.id}</span>
                     <LikeButton initialLikes={photo.likes} photoId={photo.id} />
                     <span className={styles.date}>
                       {formatRelativeTimestamp(photo.createdAt)}

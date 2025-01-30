@@ -3,6 +3,7 @@ import { PutFileIntoS3 } from "../../../util/s3/PutFileIntoS3";
 import { db } from "../../../util/db/db";
 
 import { randomBytes } from "crypto";
+import { verifyToken } from "../../../util/auth";
 
 function generateHexId(length = 8) {
   return randomBytes(length / 2).toString("hex"); // Generates 8-character hex string
@@ -25,6 +26,15 @@ function sanitizeFilename(filename: string) {
 }
 
 export async function POST(req: Request) {
+  const token = req.headers
+    .get("cookie")
+    ?.split("auth-token=")[1]
+    ?.split(";")[0];
+
+  if (!token || !verifyToken(token)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const formData = await req.formData();
     const files = formData.getAll("files") as File[];

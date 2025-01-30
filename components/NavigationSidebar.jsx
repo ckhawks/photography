@@ -53,6 +53,21 @@ const NavigationSidebar = (props) => {
         >
           Gallery
         </Link>
+        <Link
+          href={"/about"}
+          className={`${sideBarStyles.navlink} ${
+            pathname === "/about" ? sideBarStyles.active : ""
+          }`}
+        >
+          About
+        </Link>
+        <a
+          target={"_blank"}
+          href={"https://taste.stlr.cx/"}
+          className={`${sideBarStyles.navlink}`}
+        >
+          Inspiration <ExternalLink size={14} />
+        </a>
       </div>
       <div className={sideBarStyles.footer}>
         {isAuthenticated && (
@@ -93,13 +108,14 @@ const NavigationSidebar = (props) => {
         )}
         {isAuthenticated && <br />}
         <div style={{ display: "inline-block", width: "fit-content" }}>
-          <Link
+          <a
+            target="_blank"
             href={"https://github.com/ckhawks/photography"}
-            className={"external-link"}
+            className={`external-link ${sideBarStyles.footerlink}`}
           >
             GitHub
             <ExternalLink size={14} />
-          </Link>
+          </a>
         </div>
 
         {!isAuthenticated && (

@@ -1,5 +1,6 @@
 // app/api/login/route.js
 import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
 export async function POST(req: NextRequest) {
   const { password } = await req.json();
@@ -9,7 +10,9 @@ export async function POST(req: NextRequest) {
 
   if (password === secretPassword) {
     // Generate a simple token (for demo purposes)
-    const token = Buffer.from(password).toString("base64");
+    const token = jwt.sign({ authenticated: true }, process.env.JWT_SECRET!, {
+      expiresIn: "1d",
+    });
 
     // Set an HTTP-only cookie to store the token
     const response = NextResponse.json({ message: "Logged in" });
