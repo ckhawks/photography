@@ -34,7 +34,8 @@ export default function LikeButton({ photoId, initialLikes }) {
   }, [fingerprintId]);
 
   // Handle Like Toggle
-  const toggleLike = async () => {
+  const toggleLike = async (event) => {
+    event.stopPropagation();
     if (!fingerprintId) return;
 
     try {

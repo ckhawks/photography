@@ -53,7 +53,7 @@
   display: flex;
   flex-direction: row;
   justify-content: center;
-  overflow-y: auto;
+  // overflow-y: auto;
   max-height: 100%;
   margin-left: 300px;
 }
@@ -62,7 +62,7 @@
   max-width: 1210px;
   width: 100%;
   margin: 0px 20px;
-  overflow-y: scroll;
+  // overflow-y: scroll;
 }
 
 .row {
@@ -666,4 +666,146 @@
 .icon-gray {
   color: rgba(0, 0, 0, 0.2);
   transition: color 0.2s ease-in-out;
+}
+
+.controls-section {
+  margin: 0.5rem;
+  margin-left: 0rem;
+  display: flex;
+  flex-direction: row;
+  margin-top: 1.5rem;
+}
+
+.controls-group {
+  margin-right: 0.5rem;
+  border: 1px solid #f1f1f1;
+
+  border-radius: 8px;
+  margin-right: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  // gap: 0.25rem;
+  align-items: center;
+}
+
+.controls-label {
+  font-size: 14px;
+  // color: rgb(99, 99, 99);
+  // border: 1px solid #f1f1f1;
+  // border-left: none;
+  border-radius: 8px 0px 0px 8px;
+  color: rgb(0, 0, 0);
+  font-weight: 500;
+  padding: 0rem 1.25rem;
+  // padding-right: 0.75rem;
+  // border-radius: 100px 0px 0px 100px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  background-color: rgb(249, 249, 249);
+}
+
+.controls-buttons {
+  padding: 0.25rem 0.25rem;
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+}
+
+.control-button {
+  // border: rgb(192, 192, 192) 1px solid;
+  border-radius: 4px;
+  color: rgb(105, 105, 105);
+  padding: 0.5rem 1rem;
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+  // background-color: white;
+  text-decoration: none;
+  transition: color 0.2s ease-in-out, border 0.2s ease-in-out,
+    font-weight 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  box-sizing: border-box;
+  // background-color: rgb(248, 248, 248);
+  & > svg:first-child {
+    margin-right: 4px;
+    min-width: 14px;
+  }
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.control-button:hover {
+  background-color: rgb(241, 241, 241);
+  color: rgb(37, 37, 37);
+  cursor: pointer;
+}
+
+.control-button.active:hover {
+  background-color: rgb(37, 37, 37);
+  cursor: pointer;
+}
+
+// .control-button.active {
+//   background-color: rgb(37, 37, 37);
+//   color: white;
+//   border: rgb(37, 37, 37) 1px solid;
+//   font-weight: 500;
+// }
+
+.control-button.active {
+  background-color: rgb(0, 0, 0);
+  font-weight: 600;
+  // border: rgb(28, 28, 28) 1px solid;
+  // border-left: rgb(28, 28, 28) 1px solid;
+  // border-right: rgb(28, 28, 28) 1px solid;
+  color: rgb(255, 255, 255);
+  // border-radius: 4px 4px 0px 0px;
+}
+
+.circle {
+  max-width: 6px;
+  min-width: 6px;
+  margin-left: 8px;
+  // display: none;
+}
+
+@media screen and (max-width: 1280px) {
+  .previewSidebar {
+    display: none;
+  }
+
+  .rowColumns > * {
+    width: 100%;
+  }
+
+  .row {
+    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .controls-group {
+    margin: 0.25rem 0rem;
+    margin-right: 0.5rem;
+  }
+  .controls-section {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    margin-left: 0rem;
+    flex-wrap: wrap;
+  }
+  .row-separate {
+    flex-wrap: wrap;
+  }
+  .pagination-group {
+    margin-top: 0.5rem;
+  }
+  .gallery {
+    margin-top: 0px;
+  }
+}
+
+@media screen and (max-width: 850px) {
+  .controls-group-view {
+    display: none;
+  }
 }
