@@ -5,7 +5,7 @@ import sideBarStyles from "./NavigationSidebar.module.scss";
 import styles from "../app/page.module.scss";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ExternalLink } from "react-feather";
+import { ExternalLink, X } from "react-feather";
 
 const CURRENT_YEAR = new Date().getFullYear(); // returns the current year
 
@@ -27,8 +27,19 @@ const NavigationSidebar = (props) => {
     }
   }, []);
 
+  console.log("isMobileSidebar", props.isMobileSidebar);
+
   return (
-    <div className={sideBarStyles.sidebar}>
+    <div
+      className={`${sideBarStyles.sidebar} ${
+        props.isMobileSidebar ? sideBarStyles.mobile : ""
+      }`}
+    >
+      {props.isMobileSidebar && (
+        <button className={sideBarStyles.closeButton} onClick={props.onClose}>
+          <X size={24} />
+        </button>
+      )}
       <div className={sideBarStyles.topsection}>
         <h1 className={styles.title}>Stellaric's Photography</h1>
 

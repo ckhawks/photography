@@ -93,57 +93,63 @@ const UploadPhotos = () => {
   };
 
   return (
-    <div className={`${styles.home} ${styles.body}`}>
-      <NavigationSidebar />
-      <div className={styles.all}>
-        <Head>
-          <link
-            href="https://fonts.googleapis.com/css?family=Inter"
-            rel="stylesheet"
-          />
-        </Head>
-        <div className={styles.container}>
-          <h1 className={styles.title}>Upload</h1>
-          <p className={styles.description}>The more photos the merrier.</p>
-          <Form onSubmit={handleSubmit}>
-            <Form.Group controlId="formFile">
-              <Form.Label>Choose files</Form.Label>
-              <Form.Control type="file" multiple onChange={handleFileChange} />
-            </Form.Group>
+    <>
+      <div className={`${styles.home} ${styles.body}`}>
+        <NavigationSidebar />
+        <div className={styles.all}>
+          <Head>
+            <link
+              href="https://fonts.googleapis.com/css?family=Inter"
+              rel="stylesheet"
+            />
+          </Head>
+          <div className={styles.container}>
+            <h1 className={styles.title}>Upload</h1>
+            <p className={styles.description}>The more photos the merrier.</p>
+            <Form onSubmit={handleSubmit}>
+              <Form.Group controlId="formFile">
+                <Form.Label>Choose files</Form.Label>
+                <Form.Control
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                />
+              </Form.Group>
 
-            {/* Display Image Previews */}
-            {selectedFiles.length > 0 && (
-              <div
-                className={uploadStyles["image-preview-container"]}
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  flexWrap: "wrap",
-                }}
-              >
-                {selectedFiles.map(({ previewUrl, file }, index) => (
-                  <div key={index} className={uploadStyles["image-preview"]}>
-                    <img
-                      src={previewUrl}
-                      alt={file.name}
-                      className={uploadStyles["preview-image"]}
-                      width={400}
-                    />
-                    <p>{file.name}</p>
-                  </div>
-                ))}
-              </div>
-            )}
+              {/* Display Image Previews */}
+              {selectedFiles.length > 0 && (
+                <div
+                  className={uploadStyles["image-preview-container"]}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {selectedFiles.map(({ previewUrl, file }, index) => (
+                    <div key={index} className={uploadStyles["image-preview"]}>
+                      <img
+                        src={previewUrl}
+                        alt={file.name}
+                        className={uploadStyles["preview-image"]}
+                        width={400}
+                      />
+                      <p>{file.name}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-            {error && <p className="error-message">{error}</p>}
+              {error && <p className="error-message">{error}</p>}
 
-            <button type="submit" disabled={uploading}>
-              {uploading ? "Uploading..." : "Upload"}
-            </button>
-          </Form>
+              <button type="submit" disabled={uploading}>
+                {uploading ? "Uploading..." : "Upload"}
+              </button>
+            </Form>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

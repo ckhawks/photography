@@ -1,4 +1,5 @@
 // import "bootstrap/dist/css/bootstrap.min.css";
+import MobileTopMenubar from "../components/MobileTopMenubar";
 import "./globals.scss";
 
 export const metadata = {
@@ -10,7 +11,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" style={{ scrollbarGutter: "stable" }}>
-      <body>{children}</body>
+      <body>
+        <MobileTopMenubar />
+        {children}
+      </body>
     </html>
   );
 }

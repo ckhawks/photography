@@ -11,8 +11,24 @@
   height: 100%;
   max-height: calc(100vh - 8rem);
   min-height: calc(100vh - 8rem);
-  overflow: hidden;
+  // overflow: hidden;
   position: fixed;
+  &:not(.mobile) {
+    @media (max-width: 800px) {
+      display: none;
+    }
+  }
+
+  &.mobile {
+    padding-top: 1rem;
+    min-height: unset;
+    max-height: unset;
+    height: unset;
+    position: unset;
+  }
+  &.mobile > .footer {
+    margin-top: 2rem;
+  }
 }
 
 .topsection {
@@ -87,4 +103,23 @@
     color: black !important;
     font-weight: 500;
   }
+}
+
+.closeButton {
+  border: 1px solid var(--border-color);
+  // border: none;
+  border-radius: 4px;
+  // background: none;
+  // background-color: rgb(11, 11, 11);
+  // color: white;
+  max-width: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  max-height: 48px;
+  margin-left: auto;
+  margin-right: 1rem;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
