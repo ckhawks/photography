@@ -24,7 +24,7 @@ export default function FilterControls({ selectedTiers }) {
 
     // Append selected tiers to the URL
     if (currentTiers.size > 0) {
-      currentTiers.forEach((t) => params.append("photos", t));
+      currentTiers.forEach((t) => params.append("photos", String(t)));
     }
 
     router.push(`?${params.toString()}`, { scroll: false });
