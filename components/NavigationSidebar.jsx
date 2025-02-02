@@ -27,8 +27,6 @@ const NavigationSidebar = (props) => {
     }
   }, []);
 
-  console.log("isMobileSidebar", props.isMobileSidebar);
-
   return (
     <div
       className={`${sideBarStyles.sidebar} ${
@@ -52,14 +50,6 @@ const NavigationSidebar = (props) => {
           href={"/"}
           className={`${sideBarStyles.navlink} ${
             pathname === "/" ? sideBarStyles.active : ""
-          }`}
-        >
-          Hall of Fame
-        </Link>
-        <Link
-          href={"/gallery"}
-          className={`${sideBarStyles.navlink} ${
-            pathname === "/gallery" ? sideBarStyles.active : ""
           }`}
         >
           Gallery

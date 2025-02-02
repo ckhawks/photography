@@ -1,42 +1,55 @@
 import Head from "next/head";
 import styles from "./page.module.scss";
 import NavigationSidebar from "../components/NavigationSidebar";
-import LikeButton from "../components/LikeButton";
 import GalleryView from "../components/Gallery/GalleryView";
+import LikeButton from "../components/LikeButton";
+import FilterControls from "../components/Gallery/FilterControls";
+import { formatRelativeTimestamp } from "../util/date";
+import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faAlignJustify,
   faCircle,
   faTableCells,
 } from "@fortawesome/free-solid-svg-icons";
-import Link from "next/link";
-import { formatRelativeTimestamp } from "../util/date";
+import { ArrowLeft, ArrowRight } from "react-feather";
 
-export default async function HallOfFame({ searchParams }) {
-  const params = await searchParams;
+export default async function PhotographyGallery({ searchParams }) {
+  const params = await searchParams; // ✅ Await searchParams since it's now async
   const currentPage = params.page ? parseInt(params.page, 10) : 1;
-  const view = params.view || "grid";
+  const currentView = params.view || "grid";
 
-  let photos = [];
-  let totalPages = 1;
-  let error = null;
+  // ✅ Fix: Ensure `photos` is always an array
+  let selectedTiers = [];
 
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/photos/halloffame?page=${currentPage}`,
-      {
-        cache: "no-store", // Ensures fresh data
-      }
-    );
-
-    if (!res.ok) throw new Error("Failed to load photos");
-
-    const data = await res.json();
-    photos = data.photos;
-    totalPages = data.totalPages;
-  } catch (err) {
-    error = err.message;
+  if (params.photos) {
+    selectedTiers = Array.isArray(params.photos)
+      ? params.photos.map(Number) // Case where it's already an array (like `?photos=1&photos=2`)
+      : params.photos.split(",").map(Number); // Case where it's a string (`?photos=1,2,3`)
   }
+
+  // ✅ Ensure valid numbers and apply default `[3]` if empty
+  selectedTiers = selectedTiers.filter((num) => !isNaN(num));
+  if (selectedTiers.length === 0) {
+    selectedTiers = [3];
+  }
+
+  console.log("Selected Tiers:", selectedTiers); // Debugging
+
+  // Fetch photos **on the server**
+  const tierQuery = selectedTiers.map((tier) => `photos=${tier}`).join("&");
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/photos?page=${currentPage}&${tierQuery}`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!res.ok) {
+    return <p className="error-message">Failed to load photos</p>;
+  }
+
+  const { photos, totalPages } = await res.json();
 
   return (
     <div className={`${styles.home} ${styles.body}`}>
@@ -52,84 +65,50 @@ export default async function HallOfFame({ searchParams }) {
           <h1 className={styles.title}>Hall of Fame</h1>
           <p className={styles.description}>Here's my personal best work.</p>
 
-          {error && <p className="error-message">{error}</p>}
-
           <div className={styles["controls-section"]}>
-            {/* <div className={styles["controls-group"]}>
-              <div className={styles["controls-label"]}>Order</div>
-              <div className={styles["controls-buttons"]}>
-                <Link
-                  href={"/" + props.category.key + "/" + "random" + "/" + view}
-                  className={`${styles["control-button"]} ${
-                    ordering === "random" ? styles.active : ""
-                  }`}
-                  replace
-                >
-                  <FontAwesomeIcon icon={faShuffle} /> Random
-                  {ordering === "random" && (
-                    <FontAwesomeIcon
-                      icon={faCircle}
-                      className={styles["circle"]}
-                    />
-                  )}
-                </Link>
-                <Link
-                  href={"/" + props.category.key + "/" + "inorder" + "/" + view}
-                  className={`${styles["control-button"]} ${
-                    ordering === "inorder" ? styles.active : ""
-                  }`}
-                  replace
-                >
-                  <FontAwesomeIcon icon={faArrowDownShortWide} /> In Order
-                  {ordering === "inorder" && (
-                    <FontAwesomeIcon
-                      icon={faCircle}
-                      className={styles["circle"]}
-                    />
-                  )}
-                </Link>
-              </div>
-            </div> */}
+            <FilterControls selectedTiers={selectedTiers} />
             <div
               className={`${styles["controls-group"]} ${styles["controls-view"]}`}
             >
               <div className={styles["controls-label"]}>View</div>
               <div className={styles["controls-buttons"]}>
-                <Link
-                  href={"/?view=grid"}
-                  className={`${styles["control-button"]} ${
-                    view === "grid" ? styles.active : ""
-                  }`}
-                  replace
-                >
-                  <FontAwesomeIcon icon={faTableCells} /> Grid
-                  {view === "grid" && (
-                    <FontAwesomeIcon
-                      icon={faCircle}
-                      className={styles["circle"]}
-                    />
-                  )}
-                </Link>
-                <Link
-                  href={"/?view=column"}
-                  className={`${styles["control-button"]} ${
-                    view === "column" ? styles.active : ""
-                  }`}
-                  replace
-                >
-                  <FontAwesomeIcon icon={faAlignJustify} /> Column
-                  {view === "column" && (
-                    <FontAwesomeIcon
-                      icon={faCircle}
-                      className={styles["circle"]}
-                    />
-                  )}
-                </Link>
+                {["grid", "column"].map((viewMode) => {
+                  // Preserve selected photo tiers in the URL
+                  const newSearchParams = new URLSearchParams();
+                  selectedTiers.forEach((tier) =>
+                    newSearchParams.append("photos", tier)
+                  );
+                  newSearchParams.set("view", viewMode);
+
+                  return (
+                    <Link
+                      key={viewMode}
+                      href={`/?${newSearchParams.toString()}`}
+                      className={`${styles["control-button"]} ${
+                        currentView === viewMode ? styles.active : ""
+                      }`}
+                      replace
+                    >
+                      <FontAwesomeIcon
+                        icon={
+                          viewMode === "grid" ? faTableCells : faAlignJustify
+                        }
+                      />{" "}
+                      {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}
+                      {currentView === viewMode && (
+                        <FontAwesomeIcon
+                          icon={faCircle}
+                          className={styles["circle"]}
+                        />
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          {view === "grid" ? (
+          {currentView === "grid" ? (
             <GalleryView images={photos} />
           ) : (
             <div
@@ -158,6 +137,39 @@ export default async function HallOfFame({ searchParams }) {
               ))}
             </div>
           )}
+          {/* Pagination Controls */}
+          {/* Pagination Controls */}
+          {totalPages != 1 && totalPages != 0 && (
+            <div
+              className={`${"pagination"} ${styles.row}`}
+              style={{ gap: "1rem", justifyContent: "center" }}
+            >
+              {currentPage > 1 && (
+                <Link
+                  href={`/?${tierQuery}&view=${currentView}&page=${
+                    currentPage - 1
+                  }`}
+                  className={styles["button"]}
+                >
+                  <ArrowLeft size={14} /> Previous
+                </Link>
+              )}
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+              {currentPage < totalPages && (
+                <Link
+                  href={`/?${tierQuery}&view=${currentView}&page=${
+                    currentPage + 1
+                  }`}
+                  className={styles["button"]}
+                >
+                  Next <ArrowRight size={14} />
+                </Link>
+              )}
+            </div>
+          )}
+          {photos.length === 0 && <p>No photos to display.</p>}
         </div>
       </div>
     </div>

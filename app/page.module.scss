@@ -435,9 +435,9 @@
     font-weight 0.2s ease-in-out, background-color 0.2s ease-in-out;
   box-sizing: border-box;
   // background-color: rgb(248, 248, 248);
-  & > svg:first-child {
-    margin-right: 4px;
-  }
+  // & > svg:first-child {
+  //   margin-right: 4px;
+  // }
 }
 
 .control-button:hover {
@@ -703,6 +703,7 @@
   flex-direction: row;
   // gap: 0.25rem;
   align-items: center;
+  width: fit-content;
 }
 
 .controls-label {
@@ -742,13 +743,15 @@
     font-weight 0.2s ease-in-out, background-color 0.2s ease-in-out;
   box-sizing: border-box;
   // background-color: rgb(248, 248, 248);
-  & > svg:first-child {
+  & > svg:first-child:not(.circle) {
     margin-right: 4px;
     min-width: 14px;
   }
   display: flex;
   align-items: center;
   gap: 4px;
+  border: none;
+  background: none;
 }
 
 .control-button:hover {
