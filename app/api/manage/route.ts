@@ -58,7 +58,7 @@ export async function DELETE(req: Request) {
   }
 }
 
-/** ⭐ PATCH: Mark as "Hall of Fame" */
+/** 🛠️ PATCH: Update photo tier */
 export async function PATCH(req: Request) {
   const token = req.headers
     .get("cookie")
@@ -70,22 +70,30 @@ export async function PATCH(req: Request) {
   }
 
   try {
-    const { id, hallOfFame } = await req.json();
+    const { id, tier } = await req.json();
 
-    if (!id) {
-      return NextResponse.json({ error: "Missing photo ID" }, { status: 400 });
+    if (!id || tier === undefined) {
+      return NextResponse.json(
+        { error: "Missing photo ID or tier value" },
+        { status: 400 }
+      );
     }
 
-    await db(`UPDATE "Photo" SET "hallOfFame" = $1 WHERE id = $2`, [
-      hallOfFame,
-      id,
-    ]);
+    if (![1, 2, 3].includes(tier)) {
+      return NextResponse.json(
+        { error: "Invalid tier value. Must be 1, 2, or 3." },
+        { status: 400 }
+      );
+    }
+
+    // Update the tier in the database
+    await db(`UPDATE "Photo" SET "tier" = $1 WHERE id = $2`, [tier, id]);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Hall of Fame Error:", error);
+    console.error("Tier Update Error:", error);
     return NextResponse.json(
-      { error: "Failed to update Hall of Fame status" },
+      { error: "Failed to update photo tier" },
       { status: 500 }
     );
   }

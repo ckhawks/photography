@@ -10,7 +10,7 @@ const ButtonToTop = (props) => {
     // document.body.scrollTop = 0; // For Safari
     window.scrollTo({ top: 0, behavior: "smooth" });
     // document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
-    console.log(document.body.scrollHeight);
+    // console.log(document.body.scrollHeight);
   };
 
   return (

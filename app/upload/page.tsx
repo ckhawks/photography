@@ -22,6 +22,7 @@ const UploadPhotos = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
+  const [destinationTier, setDestinationTier] = useState(1); // Default tier is 1
 
   useEffect(() => {
     // Check if the client-auth cookie is present
@@ -70,6 +71,7 @@ const UploadPhotos = () => {
 
     const formData = new FormData();
     selectedFiles.forEach(({ file }) => formData.append("files", file));
+    formData.append("tier", destinationTier.toString());
 
     try {
       const response = await fetch("/api/upload", {
@@ -83,7 +85,7 @@ const UploadPhotos = () => {
         throw new Error(data.error || "Failed to upload");
       }
 
-      console.log("Uploaded successfully:", data.photos);
+      // console.log("Uploaded successfully:", data.photos);
       setSelectedFiles([]); // Clear selected files on success
     } catch (error) {
       setError(error.message);
@@ -114,6 +116,20 @@ const UploadPhotos = () => {
                   multiple
                   onChange={handleFileChange}
                 />
+              </Form.Group>
+
+              {/* Destination Tier Dropdown */}
+              <Form.Group controlId="destinationTier">
+                <Form.Label>Destination Tier</Form.Label>
+                <Form.Control
+                  as="select"
+                  value={destinationTier}
+                  onChange={(e) => setDestinationTier(parseInt(e.target.value))}
+                >
+                  <option value={3}>3 - Showcase</option>
+                  <option value={2}>2 - Notable</option>
+                  <option value={1}>1 - Extras</option>
+                </Form.Control>
               </Form.Group>
 
               {/* Display Image Previews */}

@@ -34,8 +34,6 @@ export default async function PhotographyGallery({ searchParams }) {
     selectedTiers = [3];
   }
 
-  console.log("Selected Tiers:", selectedTiers); // Debugging
-
   // Fetch photos **on the server**
   const tierQuery = selectedTiers.map((tier) => `photos=${tier}`).join("&");
   const res = await fetch(

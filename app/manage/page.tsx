@@ -6,14 +6,10 @@ import React, { useEffect, useState } from "react";
 import "inter-ui/inter.css";
 import styles from "../page.module.scss";
 import manageStyles from "./manage.module.scss";
-import { getCategories } from "../../util/GetCategories";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAsterisk } from "@fortawesome/free-solid-svg-icons";
-import ButtonBack from "../../components/ButtonBack";
-import ButtonSwap from "../../components/ButtonSwap";
 import NavigationSidebar from "../../components/NavigationSidebar";
 import Unauthorized from "../../components/Unauthorized";
 import { ArrowLeft, ArrowRight } from "react-feather";
+import { formatRelativeTimestamp } from "../../util/date";
 
 // const categories = await getCategories();
 
@@ -95,8 +91,7 @@ const PhotoManagement = () => {
     }
   };
 
-  // Mark a photo as "Hall of Fame"
-  const toggleHallOfFame = async (id, currentStatus) => {
+  const updatePhotoTier = async (id, newTier) => {
     setLoading(true);
     setError(null);
 
@@ -104,14 +99,14 @@ const PhotoManagement = () => {
       const res = await fetch("/api/manage", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, hallOfFame: !currentStatus }),
+        body: JSON.stringify({ id, tier: newTier }),
       });
 
-      if (!res.ok) throw new Error("Failed to update Hall of Fame status");
+      if (!res.ok) throw new Error("Failed to update photo tier");
 
       setPhotos((prev) =>
         prev.map((photo) =>
-          photo.id === id ? { ...photo, hallOfFame: !currentStatus } : photo
+          photo.id === id ? { ...photo, tier: newTier } : photo
         )
       );
     } catch (err) {
@@ -152,23 +147,31 @@ const PhotoManagement = () => {
                   style={{ maxWidth: 300, maxHeight: 300 }}
                   src={`api/resource/${photo.s3Key}`}
                   // width={300}
-                  alt={photo.file_name}
+                  alt={photo.originalFilename}
                 />
-                <p>{photo.file_name}</p>
+                <p>{photo.originalFilename}</p>
                 <button
                   className={`${styles["button"]} ${styles["button-secondary"]}`}
                   onClick={() => deletePhoto(photo.id, photo.s3Key)}
                 >
                   🗑 Delete
                 </button>
-                <button
-                  className={`${styles["button"]} ${styles["button-secondary"]}`}
-                  onClick={() => toggleHallOfFame(photo.id, photo.hallOfFame)}
-                >
-                  {photo.hallOfFame
-                    ? "⭐ Remove from Hall of Fame"
-                    : "🌟 Mark as Hall of Fame"}
-                </button>
+                <div>
+                  <label htmlFor={`tier-select-${photo.id}`}>Tier:</label>
+                  <select
+                    id={`tier-select-${photo.id}`}
+                    value={photo.tier || 1}
+                    onChange={(e) =>
+                      updatePhotoTier(photo.id, parseInt(e.target.value))
+                    }
+                    className={styles["dropdown"]}
+                  >
+                    <option value={3}>3 - Showcase</option>
+                    <option value={2}>2 - Notable</option>
+                    <option value={1}>1 - Extras</option>
+                  </select>
+                </div>
+                <p>{formatRelativeTimestamp(photo.createdAt)}</p>
               </div>
             ))}
           </div>

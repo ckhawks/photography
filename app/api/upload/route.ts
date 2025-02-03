@@ -10,15 +10,12 @@ function generateHexId(length = 8) {
 }
 
 function sanitizeFilename(filename: string) {
-  // Extract file extension
   const fileExtension = filename.includes(".") ? filename.split(".").pop() : "";
-
-  // Remove special characters except for letters, numbers, dashes, and underscores
   const baseName = filename
-    .replace(/\.[^/.]+$/, "") // Remove extension
-    .replace(/[^a-zA-Z0-9-_ ]/g, "") // Keep alphanumeric, dash, underscore, space
-    .replace(/\s+/g, "_") // Replace spaces with underscores
-    .substring(0, 50); // Limit length for safety
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[^a-zA-Z0-9-_ ]/g, "")
+    .replace(/\s+/g, "_")
+    .substring(0, 50);
 
   return `${generateHexId()}-${baseName}${
     fileExtension ? `.${fileExtension}` : ""
@@ -38,9 +35,17 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const files = formData.getAll("files") as File[];
+    const tier = parseInt(formData.get("tier") as string); // Get the tier from the form data
 
     if (!files || files.length === 0) {
       return NextResponse.json({ error: "No files uploaded" }, { status: 400 });
+    }
+
+    if (![1, 2, 3].includes(tier)) {
+      return NextResponse.json(
+        { error: "Invalid tier value. Must be 1, 2, or 3." },
+        { status: 400 }
+      );
     }
 
     const uploadedPhotos = [];
@@ -49,7 +54,7 @@ export async function POST(req: Request) {
       const sanitizedFilename = sanitizeFilename(file.name);
       const fileKey = `uploads/${sanitizedFilename}`;
 
-      // **Try to upload the file to S3**
+      // Upload the file to S3
       try {
         // @ts-ignore
         await PutFileIntoS3(file, fileKey);
@@ -63,11 +68,11 @@ export async function POST(req: Request) {
 
       // Store file info in the database
       const query = `
-        INSERT INTO "Photo" ("s3Key", "originalFilename", "createdAt") 
-        VALUES ($1, $2, NOW()) 
+        INSERT INTO "Photo" ("s3Key", "originalFilename", "tier", "createdAt") 
+        VALUES ($1, $2, $3, NOW()) 
         RETURNING id, "s3Key"
       `;
-      const params = [fileKey, sanitizedFilename];
+      const params = [fileKey, sanitizedFilename, tier.toString()];
       const result = await db(query, params);
 
       uploadedPhotos.push({
