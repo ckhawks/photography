@@ -1,7 +1,8 @@
-import { faVideo } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+"use client";
+
 import { useEffect, useState } from "react";
-import styles from "./ImageDisplayFullWidth.module.scss";
+import imageDisplayStyles from "./ImageDisplayFullWidth.module.scss";
+import PhotoMetaRow from "./PhotoMetaRow";
 
 const ImageDisplayFullWidth = (props) => {
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -36,39 +37,41 @@ const ImageDisplayFullWidth = (props) => {
   }, [overlayOpen]);
 
   return (
-    <div className={styles["image-display"]} key={props.image}>
-      <div className={styles.thumbnail}>
+    <div className={imageDisplayStyles["image-display"]} key={props.image}>
+      <div className={imageDisplayStyles.thumbnail}>
         <img
           loading="lazy"
           // width={1190}
-          className={styles["gallery-image"]}
+          className={imageDisplayStyles["gallery-image"]}
           // alt={"alt"}
           // src={`/gallery1/${props.image}`}
-          src={`${props.image}`}
+          src={`/api/resource/${props.image.s3Key}`}
           onClick={() => {
             setOverlayOpen(!overlayOpen);
           }}
         />
+        <PhotoMetaRow photo={props.image} />
       </div>
 
       {showingOverlay && props.overlay && (
         <div
-          className={`${styles["overlay"]} ${
-            overlayOpacitied ? styles["opacity-1"] : ""
+          className={`${imageDisplayStyles["overlay"]} ${
+            overlayOpacitied ? imageDisplayStyles["opacity-1"] : ""
           }`}
           onClick={() => {
             setOverlayOpen(!overlayOpen);
           }}
         >
           <img
-            className={`${styles["overlay-image"]} ${
-              imageOpacitied ? styles["opacity-1"] : ""
+            className={`${imageDisplayStyles["overlay-image"]} ${
+              imageOpacitied ? imageDisplayStyles["opacity-1"] : ""
             }`}
             // width={350}
             alt={"alt"}
             // src={`/gallery1/${props.image}`}
-            src={`${props.image}`}
+            src={`/api/resource/${props.image.s3Key}`}
           />
+          <PhotoMetaRow photo={props.image} />
         </div>
       )}
     </div>

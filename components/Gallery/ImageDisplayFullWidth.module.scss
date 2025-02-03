@@ -12,11 +12,13 @@
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
+  flex-direction: column;
+  align-items: center;
 }
 
 .overlay-image {
-  max-width: 95%;
-  max-height: 95%;
+  max-width: 90%;
+  max-height: 90%;
   padding: 10px;
   box-shadow: rgba(17, 17, 26, 0.1) 0px 0px 16px;
   background: white;
@@ -37,14 +39,16 @@
   transition: transform 0.1s ease-in-out;
   max-height: 80vh;
   max-width: 1190px;
-}
-
-.thumbnail {
+  &:hover {
+    transform: scale(1.01);
+  }
   transition: transform 0.2s ease-in-out;
 }
 
-.thumbnail:hover {
-  transform: scale(1.02);
+.thumbnail {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
 }
 
 .image-display {

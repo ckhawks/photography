@@ -149,29 +149,31 @@ const PhotoManagement = () => {
                   // width={300}
                   alt={photo.originalFilename}
                 />
-                <p>{photo.originalFilename}</p>
-                <button
-                  className={`${styles["button"]} ${styles["button-secondary"]}`}
-                  onClick={() => deletePhoto(photo.id, photo.s3Key)}
-                >
-                  🗑 Delete
-                </button>
-                <div>
-                  <label htmlFor={`tier-select-${photo.id}`}>Tier:</label>
-                  <select
-                    id={`tier-select-${photo.id}`}
-                    value={photo.tier || 1}
-                    onChange={(e) =>
-                      updatePhotoTier(photo.id, parseInt(e.target.value))
-                    }
-                    className={styles["dropdown"]}
+                <div className={manageStyles["photo-card-controls"]}>
+                  <p>#{photo.id}</p>
+                  <button
+                    className={`${styles["button"]} ${styles["button-secondary"]}`}
+                    onClick={() => deletePhoto(photo.id, photo.s3Key)}
                   >
-                    <option value={3}>3 - Showcase</option>
-                    <option value={2}>2 - Notable</option>
-                    <option value={1}>1 - Extras</option>
-                  </select>
+                    🗑 Delete
+                  </button>
+                  <div>
+                    <label htmlFor={`tier-select-${photo.id}`}>Tier:</label>
+                    <select
+                      id={`tier-select-${photo.id}`}
+                      value={photo.tier || 1}
+                      onChange={(e) =>
+                        updatePhotoTier(photo.id, parseInt(e.target.value))
+                      }
+                      className={styles["dropdown"]}
+                    >
+                      <option value={3}>3 - Showcase</option>
+                      <option value={2}>2 - Notable</option>
+                      <option value={1}>1 - Extras</option>
+                    </select>
+                  </div>
+                  <p>{formatRelativeTimestamp(photo.createdAt)}</p>
                 </div>
-                <p>{formatRelativeTimestamp(photo.createdAt)}</p>
               </div>
             ))}
           </div>

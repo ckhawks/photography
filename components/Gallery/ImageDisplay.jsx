@@ -1,10 +1,6 @@
-import { faVideo } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
-import { formatRelativeTimestamp } from "../../util/date";
-import LikeButton from "../LikeButton";
 import imageDisplayStyles from "./ImageDisplay.module.scss";
-import styles from "../../app/page.module.scss";
+import PhotoMetaRow from "./PhotoMetaRow";
 
 const ImageDisplay = (props) => {
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -50,16 +46,7 @@ const ImageDisplay = (props) => {
             setOverlayOpen(!overlayOpen);
           }}
         />
-        <div className={styles.photoMetaRow}>
-          <span className={styles.date}>#{props.image.id}</span>
-          <LikeButton
-            initialLikes={props.image.likes}
-            photoId={props.image.id}
-          />
-          <span className={styles.date}>
-            {formatRelativeTimestamp(props.image.createdAt)}
-          </span>
-        </div>
+        <PhotoMetaRow photo={props.image} />
       </div>
 
       {showingOverlay && props.overlay && (
@@ -78,16 +65,7 @@ const ImageDisplay = (props) => {
             alt={"alt"}
             src={`/api/resource/${props.image.s3Key}`}
           />
-          <div className={styles.photoMetaRow}>
-            <LikeButton
-              initialLikes={props.image.likes}
-              photoId={props.image.id}
-            />
-            <span className={styles.date}>#{props.image.id}</span>
-            <span className={styles.date}>
-              {formatRelativeTimestamp(props.image.createdAt)}
-            </span>
-          </div>
+          <PhotoMetaRow photo={props.image} />
         </div>
       )}
     </div>

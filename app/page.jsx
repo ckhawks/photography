@@ -4,6 +4,7 @@ import NavigationSidebar from "../components/NavigationSidebar";
 import GalleryView from "../components/Gallery/GalleryView";
 import LikeButton from "../components/LikeButton";
 import FilterControls from "../components/Gallery/FilterControls";
+import ImageDisplayFullWidth from "../components/Gallery/ImageDisplayFullWidth";
 import { formatRelativeTimestamp } from "../util/date";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -60,8 +61,11 @@ export default async function PhotographyGallery({ searchParams }) {
           />
         </Head>
         <div className={styles.container}>
-          <h1 className={styles.title}>Hall of Fame</h1>
-          <p className={styles.description}>Here's my personal best work.</p>
+          <h1 className={styles.title}>Gallery</h1>
+          <p className={styles.description}>
+            Here's my best work. You can toggle tiers of photos using the
+            controls below.
+          </p>
 
           <div className={styles["controls-section"]}>
             <FilterControls selectedTiers={selectedTiers} />
@@ -119,7 +123,12 @@ export default async function PhotographyGallery({ searchParams }) {
             >
               {photos.map((photo) => (
                 <div key={photo.id} className={styles["photo-card"]}>
-                  <img
+                  <ImageDisplayFullWidth
+                    image={photo}
+                    key={photo.s3Key}
+                    overlay
+                  />
+                  {/* <img
                     className={styles.photo}
                     src={`/api/resource/${photo.s3Key}`}
                     alt={photo.originalFilename}
@@ -130,7 +139,7 @@ export default async function PhotographyGallery({ searchParams }) {
                     <span className={styles.date}>
                       {formatRelativeTimestamp(photo.createdAt)}
                     </span>
-                  </div>
+                  </div> */}
                 </div>
               ))}
             </div>
