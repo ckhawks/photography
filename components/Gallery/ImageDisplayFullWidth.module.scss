@@ -38,6 +38,7 @@
   cursor: pointer;
   transition: transform 0.1s ease-in-out;
   max-height: 80vh;
+  width: 100%;
   max-width: 1190px;
   &:hover {
     transform: scale(1.01);
@@ -79,15 +80,28 @@
 }
 
 @media screen and (max-width: 1280px) {
-  .gallery-image {
-    max-width: calc(100vw - 20px);
-    box-shadow: none;
-    margin-bottom: none;
-  }
   .thumbnail:hover {
     transform: none;
   }
   .image-display {
     margin-bottom: 15px;
+  }
+}
+
+@media screen and (max-width: 850px) {
+  .overlay {
+    // height: calc(100vh + 4.4rem);
+    // width: calc(100vw + 2rem);
+  }
+  .overlay-image {
+    max-width: 100%;
+    padding: 16px;
+    box-shadow: none;
+  }
+  .gallery-image {
+    max-width: calc(100%);
+    box-shadow: none;
+    margin-bottom: 0px;
+    padding: 0px;
   }
 }

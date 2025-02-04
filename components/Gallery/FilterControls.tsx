@@ -31,7 +31,7 @@ export default function FilterControls({ selectedTiers }) {
   };
 
   return (
-    <div className={`${styles["controls-group"]} ${styles["controls-view"]}`}>
+    <div className={`${styles["controls-group"]}`}>
       <div className={styles["controls-label"]}>Photos</div>
       <div className={styles["controls-buttons"]}>
         {[

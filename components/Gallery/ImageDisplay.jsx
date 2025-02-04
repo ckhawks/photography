@@ -10,7 +10,7 @@ const ImageDisplay = (props) => {
 
   useEffect(() => {
     overlayOpen && (document.body.style.overflow = "hidden");
-    !overlayOpen && (document.body.style.overflow = "unset");
+    !overlayOpen && (document.body.style.overflow = "hidden");
   }, [overlayOpen]);
 
   useEffect(() => {

@@ -494,9 +494,10 @@
 //   }
 // }
 
-.pagination-group {
+.pagination-group.row {
   display: flex;
   flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 8px;
 }
@@ -822,10 +823,23 @@
   .gallery {
     margin-top: 0px;
   }
+  .all {
+    padding: 2rem 1rem;
+    max-width: 100%;
+  }
+  .view-controls {
+    display: none;
+  }
 }
 
 @media screen and (max-width: 850px) {
   .controls-group-view {
+    display: none;
+  }
+  .container {
+    margin: 0px;
+  }
+  .circle {
     display: none;
   }
 }
