@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import imageDisplayStyles from "./ImageDisplayFullWidth.module.scss";
 import PhotoMetaRow from "./PhotoMetaRow";
+import { imageUrl } from "../../constants/images";
 
 const ImageDisplayFullWidth = (props) => {
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -45,7 +46,7 @@ const ImageDisplayFullWidth = (props) => {
           className={imageDisplayStyles["gallery-image"]}
           // alt={"alt"}
           // src={`/gallery1/${props.image}`}
-          src={`/api/resource/${props.image.s3Key}`}
+          src={imageUrl(props.image.s3Key)}
           onClick={() => {
             setOverlayOpen(!overlayOpen);
           }}
@@ -69,7 +70,7 @@ const ImageDisplayFullWidth = (props) => {
             // width={350}
             alt={"alt"}
             // src={`/gallery1/${props.image}`}
-            src={`/api/resource/${props.image.s3Key}`}
+            src={imageUrl(props.image.s3Key)}
           />
           <PhotoMetaRow photo={props.image} />
         </div>

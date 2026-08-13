@@ -4,6 +4,7 @@ import React from "react";
 import "inter-ui/inter.css";
 import styles from "../page.module.scss";
 import NavigationSidebar from "../../components/NavigationSidebar";
+import { imageUrl } from "../../constants/images";
 
 const AboutPage = async () => {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/about`, {
@@ -96,7 +97,7 @@ const AboutPage = async () => {
             </div>
             <div>
               <img
-                src={"/api/resource/headshot.jpeg"}
+                src={imageUrl("headshot.jpeg")}
                 style={{ minWidth: "100%", maxWidth: "100%" }}
                 className={styles.photo}
               />

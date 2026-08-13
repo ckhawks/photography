@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import imageDisplayStyles from "./ImageDisplay.module.scss";
 import PhotoMetaRow from "./PhotoMetaRow";
+import { imageUrl } from "../../constants/images";
 
 const ImageDisplay = (props) => {
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -41,7 +42,7 @@ const ImageDisplay = (props) => {
           loading="lazy"
           width={350}
           className={imageDisplayStyles["gallery-image"]}
-          src={`/api/resource/${props.image.s3Key}`}
+          src={imageUrl(props.image.s3Key)}
           onClick={() => {
             setOverlayOpen(!overlayOpen);
           }}
@@ -63,7 +64,7 @@ const ImageDisplay = (props) => {
               imageOpacitied ? imageDisplayStyles["opacity-1"] : ""
             }`}
             alt={"alt"}
-            src={`/api/resource/${props.image.s3Key}`}
+            src={imageUrl(props.image.s3Key)}
           />
           <PhotoMetaRow photo={props.image} />
         </div>
