@@ -1,13 +1,5 @@
 module.exports = {
   webpack(config, { webpack, isServer, nextRuntime }) {
-    config.resolve.fallback = {
-      // if you miss it, all the other options in fallback, specified
-      // by next.js will be dropped.
-      ...config.resolve.fallback,
-
-      fs: false, // the solution
-    };
-
     // Avoid AWS SDK Node.js require issue
     if (isServer && nextRuntime === "nodejs")
       config.plugins.push(

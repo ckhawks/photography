@@ -68,7 +68,7 @@ const ImageDisplayFullWidth = (props) => {
               imageOpacitied ? imageDisplayStyles["opacity-1"] : ""
             }`}
             // width={350}
-            alt={"alt"}
+            alt={props.image.originalFilename || "Photograph"}
             // src={`/gallery1/${props.image}`}
             src={imageUrl(props.image.s3Key)}
           />
