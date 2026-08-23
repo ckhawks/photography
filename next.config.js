@@ -1,4 +1,8 @@
 module.exports = {
+  // Self-contained build: Next traces per-route dependencies and emits its own
+  // server.js, so the server runs without node_modules. See deploy.sh.
+  output: "standalone",
+
   webpack(config, { webpack, isServer, nextRuntime }) {
     // Avoid AWS SDK Node.js require issue
     if (isServer && nextRuntime === "nodejs")
