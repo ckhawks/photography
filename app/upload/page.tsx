@@ -1,167 +1,342 @@
 "use client";
 
-import Head from "next/head";
-import React, { useEffect, useState } from "react";
-
+import React, { useEffect, useRef, useState } from "react";
 import "inter-ui/inter.css";
+import { Check, Image as ImageIcon, RotateCw, Upload, X } from "react-feather";
 import styles from "../page.module.scss";
 import uploadStyles from "./upload.module.scss";
 import NavigationSidebar from "../../components/NavigationSidebar";
 import Unauthorized from "../../components/Unauthorized";
-import { Form } from "react-bootstrap";
+import ShootPicker from "../../components/ShootPicker";
 
-// const categories = await getCategories();
+// Files go up one request each rather than in a single form post: a 250-frame
+// roll in one request is a timeout, and one failure loses the whole batch.
+// Three at a time keeps the pipe busy without swamping the box.
+const CONCURRENCY = 3;
 
-const UploadPhotos = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState(null);
-  const [destinationTier, setDestinationTier] = useState(1); // Default tier is 1
+const TIERS = [
+  { value: 3, label: "Showcase" },
+  { value: 2, label: "Notable" },
+  { value: 1, label: "Extras" },
+];
+
+const FILM_STOCKS = [
+  "Portra 400",
+  "Portra 800",
+  "Ektar 100",
+  "Gold 200",
+  "UltraMax 400",
+  "HP5 Plus",
+  "Tri-X 400",
+  "Cinestill 800T",
+  "Lomo 800",
+];
+
+const formatSize = (bytes) =>
+  bytes > 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
+
+export default function UploadPhotos() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [items, setItems] = useState([]);
+  const [running, setRunning] = useState(false);
+  const [albums, setAlbums] = useState([]);
+
+  const [albumId, setAlbumId] = useState(null);
+  const [tier, setTier] = useState(1);
+  const [medium, setMedium] = useState("");
+  const [filmStock, setFilmStock] = useState("");
+
+  const fileInput = useRef(null);
+  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
-    // Check if the client-auth cookie is present
-    const isAuthenticated = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("client-auth="));
-
-    if (isAuthenticated) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
+    setIsAuthenticated(
+      Boolean(document.cookie.split("; ").find((row) => row.startsWith("client-auth=")))
+    );
   }, []);
 
-  if (!isAuthenticated) {
-    return (
-      <>
-        <Unauthorized />
-      </>
-    );
-  }
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    fetch("/api/albums")
+      .then((res) => (res.ok ? res.json() : { albums: [] }))
+      .then((data) => setAlbums(data.albums ?? []))
+      .catch((error) => console.error("Failed to load shoots:", error));
+  }, [isAuthenticated]);
 
-  const handleFileChange = (event) => {
-    const filesArray = Array.from(event.target.files);
+  // object URLs are cheap but not free; let them go when the queue is emptied
+  useEffect(
+    () => () => items.forEach((item) => item.previewUrl && URL.revokeObjectURL(item.previewUrl)),
+    [items]
+  );
 
-    // Only allow images
-    const imageFiles = filesArray.filter((file) =>
-      // @ts-ignore
-      file?.type.startsWith("image/")
-    );
+  if (!isAuthenticated) return <Unauthorized />;
 
-    // Generate preview URLs
-    const filePreviews = imageFiles.map((file) => ({
-      file,
-      // @ts-ignore
-      previewUrl: URL.createObjectURL(file),
-    }));
+  const addFiles = (fileList: FileList) => {
+    const additions = Array.from(fileList)
+      .filter((file) => file.type.startsWith("image/"))
+      .map((file, index) => ({
+        key: `${file.name}-${file.size}-${Date.now()}-${index}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+        status: "waiting",
+        error: null,
+      }));
 
-    setSelectedFiles(filePreviews);
+    setItems((prev) => {
+      // dropping the same folder twice should not upload it twice
+      const seen = new Set(prev.map((item) => `${item.file.name}:${item.file.size}`));
+      return [...prev, ...additions.filter((item) => !seen.has(`${item.file.name}:${item.file.size}`))];
+    });
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setUploading(true);
-    setError(null);
+  const setStatus = (key, status, error = null) =>
+    setItems((prev) => prev.map((item) => (item.key === key ? { ...item, status, error } : item)));
 
-    const formData = new FormData();
-    selectedFiles.forEach(({ file }) => formData.append("files", file));
-    formData.append("tier", destinationTier.toString());
+  const uploadOne = async (item) => {
+    setStatus(item.key, "uploading");
+
+    const body = new FormData();
+    body.append("files", item.file);
+    body.append("tier", String(tier));
+    if (albumId) body.append("albumId", String(albumId));
+    if (medium) body.append("medium", medium);
+    if (medium === "film" && filmStock.trim()) body.append("filmStock", filmStock.trim());
 
     try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to upload");
-      }
-
-      // console.log("Uploaded successfully:", data.photos);
-      setSelectedFiles([]); // Clear selected files on success
+      const res = await fetch("/api/upload", { method: "POST", body });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Upload failed (${res.status})`);
+      setStatus(item.key, "done");
     } catch (error) {
-      setError(error.message);
-    } finally {
-      setUploading(false);
+      setStatus(item.key, "failed", error.message);
     }
   };
 
+  const run = async (queue) => {
+    if (!queue.length) return;
+    setRunning(true);
+
+    const pending = [...queue];
+    const workers = Array.from({ length: Math.min(CONCURRENCY, pending.length) }, async () => {
+      while (pending.length) await uploadOne(pending.shift());
+    });
+    await Promise.all(workers);
+
+    setRunning(false);
+    // shoots gain photos as the run goes, so the counts in the picker are stale
+    fetch("/api/albums")
+      .then((res) => (res.ok ? res.json() : { albums }))
+      .then((data) => setAlbums(data.albums ?? albums))
+      .catch(() => {});
+  };
+
+  const createShoot = async (shoot) => {
+    const res = await fetch("/api/albums", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(shoot),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to create shoot");
+    setAlbums((prev) =>
+      [...prev, data.album].sort((a, b) => String(b.shootDate).localeCompare(String(a.shootDate)))
+    );
+    return data.album;
+  };
+
+  const counts = items.reduce(
+    (totals, item) => ({ ...totals, [item.status]: (totals[item.status] ?? 0) + 1 }),
+    {}
+  );
+  const waiting = items.filter((item) => item.status === "waiting");
+  const failed = items.filter((item) => item.status === "failed");
+  const totalBytes = waiting.reduce((sum, item) => sum + item.file.size, 0);
+
   return (
-    <>
-      <div className={`${styles.home} ${styles.body}`}>
-        <NavigationSidebar />
-        <div className={styles.all}>
-          <Head>
-            <link
-              href="https://fonts.googleapis.com/css?family=Inter"
-              rel="stylesheet"
-            />
-          </Head>
-          <div className={styles.container}>
-            <h1 className={styles.title}>Upload</h1>
-            <p className={styles.description}>The more photos the merrier.</p>
-            <Form onSubmit={handleSubmit}>
-              <Form.Group controlId="formFile">
-                <Form.Label>Choose files</Form.Label>
-                <Form.Control
+    <div className={`${styles.home} ${styles.body}`}>
+      <NavigationSidebar />
+      <div className={styles.all}>
+        <div className={styles.container}>
+          <h1 className={styles.title}>Upload</h1>
+          <p className={styles.description}>
+            Drop a batch in. Decisions are per batch, not per photo.
+          </p>
+
+          <div className={uploadStyles.layout}>
+            <div className={uploadStyles.settings}>
+              <div className={uploadStyles.panel}>
+                <div className={uploadStyles.panelLabel}>Shoot</div>
+                <ShootPicker
+                  albums={albums}
+                  value={albumId}
+                  onAssign={(id) => setAlbumId(id)}
+                  onCreate={createShoot}
+                />
+                <p className={uploadStyles.hint}>
+                  Everything in this batch is filed here. Leave it on no shoot to file later.
+                </p>
+              </div>
+
+              <div className={uploadStyles.panel}>
+                <div className={uploadStyles.panelLabel}>Tier</div>
+                <div className={uploadStyles.segmented}>
+                  {TIERS.map((option) => (
+                    <button
+                      type="button"
+                      key={option.value}
+                      className={`${uploadStyles.segment} ${tier === option.value ? uploadStyles.active : ""}`}
+                      onClick={() => setTier(option.value)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                <p className={uploadStyles.hint}>Promote the keepers afterwards in Manage.</p>
+              </div>
+
+              <div className={uploadStyles.panel}>
+                <div className={uploadStyles.panelLabel}>Shot on</div>
+                <div className={uploadStyles.segmented}>
+                  {["film", "digital"].map((option) => (
+                    <button
+                      type="button"
+                      key={option}
+                      className={`${uploadStyles.segment} ${medium === option ? uploadStyles.active : ""}`}
+                      onClick={() => setMedium(medium === option ? "" : option)}
+                    >
+                      {option === "film" ? "Film" : "Digital"}
+                    </button>
+                  ))}
+                </div>
+                {medium === "film" && (
+                  <input
+                    className={uploadStyles.input}
+                    list="upload-film-stocks"
+                    placeholder="Film stock"
+                    value={filmStock}
+                    onChange={(event) => setFilmStock(event.target.value)}
+                  />
+                )}
+                {medium !== "film" && (
+                  <p className={uploadStyles.hint}>
+                    Camera and lens come from EXIF where the file still has it.
+                  </p>
+                )}
+                <datalist id="upload-film-stocks">
+                  {FILM_STOCKS.map((stock) => (
+                    <option value={stock} key={stock} />
+                  ))}
+                </datalist>
+              </div>
+
+              <button
+                type="button"
+                className={uploadStyles.upload}
+                disabled={running || waiting.length === 0}
+                onClick={() => run(waiting)}
+              >
+                <Upload size={15} />
+                {running
+                  ? `Uploading ${counts.uploading ?? 0}...`
+                  : waiting.length
+                    ? `Upload ${waiting.length} photo${waiting.length === 1 ? "" : "s"} · ${formatSize(totalBytes)}`
+                    : "Nothing waiting"}
+              </button>
+
+              {failed.length > 0 && !running && (
+                <button type="button" className={uploadStyles.retry} onClick={() => run(failed)}>
+                  <RotateCw size={14} />
+                  Retry {failed.length} failed
+                </button>
+              )}
+            </div>
+
+            <div className={uploadStyles.queueColumn}>
+              <div
+                className={`${uploadStyles.dropzone} ${dragging ? uploadStyles.dragging : ""}`}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setDragging(true);
+                }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setDragging(false);
+                  addFiles(event.dataTransfer.files);
+                }}
+                onClick={() => fileInput.current?.click()}
+              >
+                <ImageIcon size={18} />
+                <span>Drop photos here, or click to choose</span>
+                <input
+                  ref={fileInput}
                   type="file"
                   multiple
-                  onChange={handleFileChange}
-                />
-              </Form.Group>
-
-              {/* Destination Tier Dropdown */}
-              <Form.Group controlId="destinationTier">
-                <Form.Label>Destination Tier</Form.Label>
-                <Form.Control
-                  as="select"
-                  value={destinationTier}
-                  onChange={(e) => setDestinationTier(parseInt(e.target.value))}
-                >
-                  <option value={3}>3 - Showcase</option>
-                  <option value={2}>2 - Notable</option>
-                  <option value={1}>1 - Extras</option>
-                </Form.Control>
-              </Form.Group>
-
-              {/* Display Image Previews */}
-              {selectedFiles.length > 0 && (
-                <div
-                  className={uploadStyles["image-preview-container"]}
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    flexWrap: "wrap",
+                  accept="image/*"
+                  hidden
+                  onChange={(event) => {
+                    addFiles(event.target.files);
+                    event.target.value = "";
                   }}
-                >
-                  {selectedFiles.map(({ previewUrl, file }, index) => (
-                    <div key={index} className={uploadStyles["image-preview"]}>
-                      <img
-                        src={previewUrl}
-                        alt={file.name}
-                        className={uploadStyles["preview-image"]}
-                        width={400}
-                      />
-                      <p>{file.name}</p>
-                    </div>
-                  ))}
+                />
+              </div>
+
+              {items.length > 0 && (
+                <div className={uploadStyles.queueHeader}>
+                  <span>
+                    {items.length} file{items.length === 1 ? "" : "s"}
+                    {counts.done ? ` · ${counts.done} done` : ""}
+                    {counts.failed ? ` · ${counts.failed} failed` : ""}
+                  </span>
+                  <button
+                    type="button"
+                    className={uploadStyles.clear}
+                    disabled={running}
+                    onClick={() => setItems(items.filter((item) => item.status === "uploading"))}
+                  >
+                    Clear list
+                  </button>
                 </div>
               )}
 
-              {error && <p className="error-message">{error}</p>}
-
-              <button type="submit" disabled={uploading}>
-                {uploading ? "Uploading..." : "Upload"}
-              </button>
-            </Form>
+              <div className={uploadStyles.queue}>
+                {items.map((item) => (
+                  <div className={uploadStyles.row} key={item.key} data-status={item.status}>
+                    <img className={uploadStyles.rowThumb} src={item.previewUrl} alt="" />
+                    <div className={uploadStyles.rowText}>
+                      <div className={uploadStyles.rowName}>{item.file.name}</div>
+                      <div className={uploadStyles.rowMeta}>
+                        {item.status === "failed"
+                          ? item.error
+                          : item.status === "uploading"
+                            ? "Uploading, resizing, reading EXIF..."
+                            : formatSize(item.file.size)}
+                      </div>
+                    </div>
+                    <div className={uploadStyles.rowStatus}>
+                      {item.status === "done" && <Check size={16} />}
+                      {item.status === "failed" && <X size={16} />}
+                      {item.status === "uploading" && <span className={uploadStyles.spinner} />}
+                      {item.status === "waiting" && !running && (
+                        <button
+                          type="button"
+                          className={uploadStyles.remove}
+                          onClick={() =>
+                            setItems((prev) => prev.filter((other) => other.key !== item.key))
+                          }
+                          aria-label="Remove"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
-};
-
-export default UploadPhotos;
+}

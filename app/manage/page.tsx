@@ -1,43 +1,42 @@
 "use client";
 
-import Head from "next/head";
-import React, { useEffect, useState } from "react";
-
+import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import "inter-ui/inter.css";
+import { ArrowLeft, ArrowRight, Search, Trash2, Upload, X } from "react-feather";
 import styles from "../page.module.scss";
 import manageStyles from "./manage.module.scss";
 import NavigationSidebar from "../../components/NavigationSidebar";
 import Unauthorized from "../../components/Unauthorized";
-import { ArrowLeft, ArrowRight } from "react-feather";
 import { formatRelativeTimestamp } from "../../util/date";
-import { imageUrl, thumbnailUrl } from "../../constants/images";
+import { thumbnailUrl } from "../../constants/images";
 import PhotoGearEditor from "../../components/PhotoGearEditor";
 import ShootPicker from "../../components/ShootPicker";
+import { normalizeCamera } from "../../util/images/normalizeGear";
 
-// const categories = await getCategories();
+const TIERS = [
+  { value: 3, label: "Showcase" },
+  { value: 2, label: "Notable" },
+  { value: 1, label: "Extras" },
+];
 
 const PhotoManagement = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [photos, setPhotos] = useState([]);
+  const [albums, setAlbums] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(() => new Set<number>());
 
   useEffect(() => {
-    // Check if the client-auth cookie is present
-    const isAuthenticated = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("client-auth="));
-
-    if (isAuthenticated) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
+    setIsAuthenticated(
+      Boolean(document.cookie.split("; ").find((row) => row.startsWith("client-auth=")))
+    );
   }, []);
 
-  // Fetch paginated photos
   useEffect(() => {
     async function fetchPhotos() {
       setLoading(true);
@@ -46,11 +45,11 @@ const PhotoManagement = () => {
       try {
         const res = await fetch(`/api/photos?page=${currentPage}&sort=newest`);
         const data = await res.json();
-
         if (!res.ok) throw new Error(data.error || "Failed to load photos");
 
         setPhotos(data.photos);
         setTotalPages(data.totalPages);
+        setSelected(new Set()); // a selection cannot span pages
       } catch (err) {
         setError(err.message);
       } finally {
@@ -59,46 +58,10 @@ const PhotoManagement = () => {
     }
 
     fetchPhotos();
-  }, [currentPage]); // Refetch when page changes
-
-  // Handle pagination
-  const nextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
-
-  const prevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
-  // Delete a photo
-  const deletePhoto = async (id, fileKey) => {
-    if (!confirm("Are you sure you want to delete this photo?")) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/manage", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, fileKey }),
-      });
-
-      if (!res.ok) throw new Error("Failed to delete photo");
-
-      setPhotos((prev) => prev.filter((photo) => photo.id !== id));
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const [albums, setAlbums] = useState([]);
+  }, [currentPage]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
-
     fetch("/api/albums")
       .then((res) => (res.ok ? res.json() : { albums: [] }))
       .then((data) => setAlbums(data.albums ?? []))
@@ -111,11 +74,9 @@ const PhotoManagement = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(shoot),
     });
-
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed to create shoot");
 
-    // newest first, matching the Albums page
     setAlbums((prev) =>
       [...prev, data.album].sort((a, b) => String(b.shootDate).localeCompare(String(a.shootDate)))
     );
@@ -128,32 +89,17 @@ const PhotoManagement = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, ...changes }),
     });
-
     if (!res.ok) throw new Error("Failed to update photo");
 
-    setPhotos((prev) =>
-      prev.map((photo) => (photo.id === id ? { ...photo, ...changes } : photo))
-    );
+    setPhotos((prev) => prev.map((photo) => (photo.id === id ? { ...photo, ...changes } : photo)));
   };
 
-  const updatePhotoTier = async (id, newTier) => {
+  /** The same change across every selected photo. */
+  const updateSelected = async (changes) => {
     setLoading(true);
     setError(null);
-
     try {
-      const res = await fetch("/api/manage", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, tier: newTier }),
-      });
-
-      if (!res.ok) throw new Error("Failed to update photo tier");
-
-      setPhotos((prev) =>
-        prev.map((photo) =>
-          photo.id === id ? { ...photo, tier: newTier } : photo
-        )
-      );
+      await Promise.all([...selected].map((id) => updatePhoto(id, changes)));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -161,93 +107,266 @@ const PhotoManagement = () => {
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <>
-        <Unauthorized />
-      </>
+  const deletePhoto = async (id, fileKey) => {
+    if (!confirm("Delete this photo?")) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/manage", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, fileKey }),
+      });
+      if (!res.ok) throw new Error("Failed to delete photo");
+
+      setPhotos((prev) => prev.filter((photo) => photo.id !== id));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteSelected = async () => {
+    if (!confirm(`Delete ${selected.size} photos? This cannot be undone.`)) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      const targets = photos.filter((photo) => selected.has(photo.id));
+      await Promise.all(
+        targets.map((photo) =>
+          fetch("/api/manage", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: photo.id, fileKey: photo.s3Key }),
+          })
+        )
+      );
+      setPhotos((prev) => prev.filter((photo) => !selected.has(photo.id)));
+      setSelected(new Set());
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggle = (id) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const visible = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return photos;
+    return photos.filter((photo) =>
+      [photo.originalFilename, photo.camera, photo.filmStock, `#${photo.id}`]
+        .filter(Boolean)
+        .some((field) => String(field).toLowerCase().includes(term))
     );
-  }
+  }, [photos, search]);
+
+  const tally = useMemo(() => {
+    const counts = { 3: 0, 2: 0, 1: 0 };
+    for (const photo of photos) counts[photo.tier] = (counts[photo.tier] ?? 0) + 1;
+    return counts;
+  }, [photos]);
+
+  if (!isAuthenticated) return <Unauthorized />;
 
   return (
     <div className={`${styles.home} ${styles.body}`}>
       <NavigationSidebar />
       <div className={styles.all}>
-        <Head>
-          <link
-            href="https://fonts.googleapis.com/css?family=Inter"
-            rel="stylesheet"
-          />
-        </Head>
         <div className={styles.container}>
-          <h1 className={styles.title}>Manage</h1>
-          <p className={styles.description}>What goes where?</p>
-          {error && <p className={manageStyles["error-message"]}>{error}</p>}
-          {loading && <p>Loading...</p>}
-
-          <div className={manageStyles["photo-grid"]}>
-            {photos.map((photo) => (
-              <div key={photo.id} className={manageStyles["photo-card"]}>
-                <img
-                  style={{ maxWidth: 300, maxHeight: 300 }}
-                  src={thumbnailUrl(photo)}
-                  // width={300}
-                  alt={photo.originalFilename}
+          <div className={manageStyles.header}>
+            <div>
+              <h1 className={styles.title}>Manage</h1>
+              <p className={manageStyles.subtitle}>
+                {tally[3]} showcase · {tally[2]} notable · {tally[1]} extras on this page
+              </p>
+            </div>
+            <div className={manageStyles.headerActions}>
+              <div className={manageStyles.searchBox}>
+                <Search size={15} />
+                <input
+                  placeholder="Filter this page"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
                 />
-                <div className={manageStyles["photo-card-controls"]}>
-                  <p>#{photo.id}</p>
-                  <button
-                    className={`${styles["button"]} ${styles["button-secondary"]}`}
-                    onClick={() => deletePhoto(photo.id, photo.s3Key)}
-                  >
-                    🗑 Delete
+                {search && (
+                  <button type="button" onClick={() => setSearch("")} aria-label="Clear filter">
+                    <X size={14} />
                   </button>
-                  <div>
-                    <label htmlFor={`tier-select-${photo.id}`}>Tier:</label>
-                    <select
-                      id={`tier-select-${photo.id}`}
-                      value={photo.tier || 1}
-                      onChange={(e) =>
-                        updatePhotoTier(photo.id, parseInt(e.target.value))
-                      }
-                      className={styles["dropdown"]}
+                )}
+              </div>
+              <Link href="/upload" className={manageStyles.uploadButton}>
+                <Upload size={15} />
+                Upload
+              </Link>
+            </div>
+          </div>
+
+          {error && <p className={manageStyles.error}>{error}</p>}
+
+          {selected.size > 0 && (
+            <div className={manageStyles.selectionBar}>
+              <div className={manageStyles.selectionGroup}>
+                <span className={manageStyles.selectionCount}>{selected.size} selected</span>
+                <span className={manageStyles.selectionLabel}>Set tier</span>
+                {TIERS.map((option) => (
+                  <button
+                    type="button"
+                    key={option.value}
+                    className={manageStyles.selectionButton}
+                    onClick={() => updateSelected({ tier: option.value })}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+                <span className={manageStyles.selectionLabel}>Shoot</span>
+                <select
+                  className={manageStyles.selectionSelect}
+                  value=""
+                  onChange={(event) =>
+                    updateSelected({
+                      albumId: event.target.value === "none" ? null : Number(event.target.value),
+                    })
+                  }
+                >
+                  <option value="" disabled>
+                    File into...
+                  </option>
+                  <option value="none">No shoot</option>
+                  {albums.map((album) => (
+                    <option value={album.id} key={album.id}>
+                      {album.title} · {String(album.shootDate).slice(0, 10)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={manageStyles.selectionGroup}>
+                <button
+                  type="button"
+                  className={manageStyles.clearSelection}
+                  onClick={() => setSelected(new Set())}
+                >
+                  Clear
+                </button>
+                <button type="button" className={manageStyles.deleteButton} onClick={deleteSelected}>
+                  <Trash2 size={14} />
+                  Delete
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className={manageStyles.selectAllRow}>
+            <button
+              type="button"
+              className={manageStyles.textButton}
+              onClick={() =>
+                setSelected(
+                  selected.size === visible.length
+                    ? new Set()
+                    : new Set(visible.map((photo) => photo.id))
+                )
+              }
+            >
+              {selected.size === visible.length && visible.length > 0
+                ? "Deselect all"
+                : `Select all ${visible.length}`}
+            </button>
+            {loading && <span className={manageStyles.working}>Working...</span>}
+          </div>
+
+          <div className={manageStyles.grid}>
+            {visible.map((photo) => (
+              <div
+                key={photo.id}
+                className={`${manageStyles.card} ${selected.has(photo.id) ? manageStyles.selected : ""}`}
+              >
+                <div className={manageStyles.frame} onClick={() => toggle(photo.id)}>
+                  <img src={thumbnailUrl(photo)} alt={photo.originalFilename || "Photograph"} />
+                  <span
+                    className={`${manageStyles.check} ${selected.has(photo.id) ? manageStyles.checked : ""}`}
+                    aria-hidden="true"
+                  />
+                </div>
+
+                <div className={manageStyles.cardBody}>
+                  <div className={manageStyles.identity}>
+                    <span className={manageStyles.filename} title={photo.originalFilename}>
+                      #{photo.id} · {photo.originalFilename}
+                    </span>
+                    <button
+                      type="button"
+                      className={manageStyles.iconButton}
+                      onClick={() => deletePhoto(photo.id, photo.s3Key)}
+                      aria-label="Delete photo"
                     >
-                      <option value={3}>3 - Showcase</option>
-                      <option value={2}>2 - Notable</option>
-                      <option value={1}>1 - Extras</option>
-                    </select>
+                      <Trash2 size={15} />
+                    </button>
                   </div>
+
+                  <div className={manageStyles.segmented}>
+                    {TIERS.map((option) => (
+                      <button
+                        type="button"
+                        key={option.value}
+                        className={`${manageStyles.segment} ${photo.tier === option.value ? manageStyles.active : ""}`}
+                        onClick={() => updatePhoto(photo.id, { tier: option.value })}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+
                   <ShootPicker
                     albums={albums}
                     value={photo.albumId}
                     onAssign={(albumId) => updatePhoto(photo.id, { albumId })}
                     onCreate={createShoot}
                   />
+
                   <PhotoGearEditor photo={photo} onSave={updatePhoto} />
-                  <p>{formatRelativeTimestamp(photo.createdAt)}</p>
+
+                  <div className={manageStyles.footnote}>
+                    {normalizeCamera(null, photo.camera) || "No camera"} ·{" "}
+                    {formatRelativeTimestamp(photo.createdAt)}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          <br />
-          <div
-            className={`${"pagination"} ${styles.row}`}
-            style={{ gap: "1rem", justifyContent: "center" }}
-          >
+          {visible.length === 0 && !loading && (
+            <p className={manageStyles.empty}>
+              {search ? "Nothing on this page matches." : "No photos yet."}
+            </p>
+          )}
+
+          <div className={manageStyles.pagination}>
             <button
-              className={`${styles["button"]} ${styles["button-secondary"]}`}
-              onClick={prevPage}
+              type="button"
+              className={manageStyles.pageButton}
+              onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
               disabled={currentPage === 1}
             >
               <ArrowLeft size={14} /> Previous
             </button>
-            <span>
+            <span className={manageStyles.pageLabel}>
               Page {currentPage} of {totalPages}
             </span>
             <button
-              className={`${styles["button"]} ${styles["button-secondary"]}`}
-              onClick={nextPage}
+              type="button"
+              className={manageStyles.pageButton}
+              onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
               disabled={currentPage === totalPages}
             >
               Next <ArrowRight size={14} />
