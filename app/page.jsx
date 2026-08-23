@@ -33,6 +33,9 @@ export default async function PhotographyGallery({ searchParams }) {
     selectedTiers = [3];
   }
 
+  // carried in the pagination links below
+  const tierQuery = selectedTiers.map((tier) => `photos=${tier}`).join("&");
+
   // Query the database directly. This used to fetch its own /api/photos route
   // over HTTP from a server component, which is a round trip to itself on every
   // render and breaks outright if NEXT_PUBLIC_BASE_URL is wrong.
