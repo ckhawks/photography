@@ -64,7 +64,7 @@ export async function PATCH(req: Request) {
   }
 
   try {
-    const { id, tier, medium, camera, lens, filmStock } = await req.json();
+    const { id, tier, medium, camera, lens, filmStock, albumId } = await req.json();
 
     if (!id) {
       return NextResponse.json({ error: "Missing photo ID" }, { status: 400 });
@@ -95,6 +95,10 @@ export async function PATCH(req: Request) {
     if (camera !== undefined) updates.push({ column: "camera", value: text(camera) });
     if (lens !== undefined) updates.push({ column: "lens", value: text(lens) });
     if (filmStock !== undefined) updates.push({ column: "filmStock", value: text(filmStock) });
+    // null clears the shoot, which is how a photo goes back to being unfiled
+    if (albumId !== undefined) {
+      updates.push({ column: "albumId", value: albumId === null || albumId === "" ? null : Number(albumId) });
+    }
 
     if (!updates.length) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });

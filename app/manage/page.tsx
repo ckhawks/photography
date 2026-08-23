@@ -12,6 +12,7 @@ import { ArrowLeft, ArrowRight } from "react-feather";
 import { formatRelativeTimestamp } from "../../util/date";
 import { imageUrl, thumbnailUrl } from "../../constants/images";
 import PhotoGearEditor from "../../components/PhotoGearEditor";
+import ShootPicker from "../../components/ShootPicker";
 
 // const categories = await getCategories();
 
@@ -91,6 +92,34 @@ const PhotoManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const [albums, setAlbums] = useState([]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    fetch("/api/albums")
+      .then((res) => (res.ok ? res.json() : { albums: [] }))
+      .then((data) => setAlbums(data.albums ?? []))
+      .catch((err) => console.error("Failed to load shoots:", err));
+  }, [isAuthenticated]);
+
+  const createShoot = async (shoot) => {
+    const res = await fetch("/api/albums", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(shoot),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to create shoot");
+
+    // newest first, matching the Albums page
+    setAlbums((prev) =>
+      [...prev, data.album].sort((a, b) => String(b.shootDate).localeCompare(String(a.shootDate)))
+    );
+    return data.album;
   };
 
   const updatePhoto = async (id, changes) => {
@@ -188,6 +217,12 @@ const PhotoManagement = () => {
                       <option value={1}>1 - Extras</option>
                     </select>
                   </div>
+                  <ShootPicker
+                    albums={albums}
+                    value={photo.albumId}
+                    onAssign={(albumId) => updatePhoto(photo.id, { albumId })}
+                    onCreate={createShoot}
+                  />
                   <PhotoGearEditor photo={photo} onSave={updatePhoto} />
                   <p>{formatRelativeTimestamp(photo.createdAt)}</p>
                 </div>

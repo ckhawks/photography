@@ -13,6 +13,7 @@ export type PhotoRow = {
   lens: string | null;
   filmStock: string | null;
   exif: { aperture?: number; shutter?: string; iso?: number; focalLength?: number } | null;
+  albumId?: number | null;
   albumSlug?: string | null;
   albumTitle?: string | null;
   createdAt: string;
@@ -74,7 +75,7 @@ export async function getGalleryPhotos({
     `SELECT "Photo"."id", "Photo"."s3Key", "Photo"."thumbKey", "Photo"."originalFilename", "Photo"."createdAt",
         "Photo"."width", "Photo"."height", "Photo"."medium", "Photo"."camera", "Photo"."lens",
         "Photo"."filmStock", "Photo"."exif",
-        "Album"."slug" AS "albumSlug", "Album"."title" AS "albumTitle",
+        "Photo"."albumId", "Album"."slug" AS "albumSlug", "Album"."title" AS "albumTitle",
         COALESCE(like_counts."like_count", 0)::INTEGER AS "likes", "Photo"."tier"
        FROM "Photo"
        LEFT JOIN (
