@@ -62,6 +62,7 @@ export default async function Albums() {
                   <div className={albumStyles.rail}>
                     <div className={albumStyles.railMonth}>{date.month}</div>
                     <div className={albumStyles.railYear}>{date.year}</div>
+                    <span className={albumStyles.dot} aria-hidden="true" />
                   </div>
 
                   <div className={albumStyles.rowBody}>
