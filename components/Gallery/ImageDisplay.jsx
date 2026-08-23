@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import imageDisplayStyles from "./ImageDisplay.module.scss";
 import PhotoMetaRow from "./PhotoMetaRow";
-import { imageUrl } from "../../constants/images";
+import { imageUrl, thumbnailUrl } from "../../constants/images";
 
 const ImageDisplay = (props) => {
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -39,9 +39,11 @@ const ImageDisplay = (props) => {
       <div className={imageDisplayStyles.thumbnail}>
         <img
           loading="lazy"
+          decoding="async"
           width={350}
           className={imageDisplayStyles["gallery-image"]}
-          src={imageUrl(props.image.s3Key)}
+          alt={props.image.originalFilename || "Photograph"}
+          src={thumbnailUrl(props.image)}
           onClick={() => {
             setOverlayOpen(!overlayOpen);
           }}

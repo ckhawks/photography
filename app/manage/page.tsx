@@ -10,7 +10,7 @@ import NavigationSidebar from "../../components/NavigationSidebar";
 import Unauthorized from "../../components/Unauthorized";
 import { ArrowLeft, ArrowRight } from "react-feather";
 import { formatRelativeTimestamp } from "../../util/date";
-import { imageUrl } from "../../constants/images";
+import { imageUrl, thumbnailUrl } from "../../constants/images";
 
 // const categories = await getCategories();
 
@@ -146,7 +146,7 @@ const PhotoManagement = () => {
               <div key={photo.id} className={manageStyles["photo-card"]}>
                 <img
                   style={{ maxWidth: 300, maxHeight: 300 }}
-                  src={imageUrl(photo.s3Key)}
+                  src={thumbnailUrl(photo)}
                   // width={300}
                   alt={photo.originalFilename}
                 />

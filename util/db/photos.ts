@@ -5,6 +5,7 @@ export type PhotoRow = {
   id: number;
   s3Key: string;
   originalFilename: string | null;
+  thumbKey: string | null;
   createdAt: string;
   likes: number;
   tier: number | null;
@@ -61,7 +62,7 @@ export async function getGalleryPhotos({
   }
 
   const photos = await db<PhotoRow>(
-    `SELECT "Photo"."id", "Photo"."s3Key", "Photo"."originalFilename", "Photo"."createdAt",
+    `SELECT "Photo"."id", "Photo"."s3Key", "Photo"."thumbKey", "Photo"."originalFilename", "Photo"."createdAt",
         COALESCE(like_counts."like_count", 0)::INTEGER AS "likes", "Photo"."tier"
        FROM "Photo"
        LEFT JOIN (

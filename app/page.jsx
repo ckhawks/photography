@@ -30,7 +30,9 @@ export default async function PhotographyGallery({ searchParams }) {
 
   selectedTiers = selectedTiers.filter((num) => !isNaN(num));
   if (selectedTiers.length === 0) {
-    selectedTiers = [3];
+    // showcase + notable: both are presentable work, and the Timeline is where
+    // extras will live. Interleaved by date on purpose, not ranked by tier.
+    selectedTiers = [3, 2];
   }
 
   // carried in the pagination links below

@@ -15,3 +15,12 @@ export const IMAGE_BASE_URL = configuredBase
 export function imageUrl(s3Key: string) {
   return `${IMAGE_BASE_URL}/${s3Key.replace(/^\/+/, "")}`;
 }
+
+/**
+ * The wall and the admin grid want the resized copy; the lightbox wants the
+ * original. Photos uploaded before thumbnails existed have no thumbKey, so
+ * this falls back to the original rather than showing nothing.
+ */
+export function thumbnailUrl(photo: { s3Key: string; thumbKey?: string | null }) {
+  return imageUrl(photo.thumbKey || photo.s3Key);
+}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { PutFileIntoS3 } from "../../../util/s3/PutFileIntoS3";
+import { PutBufferIntoS3, PutFileIntoS3 } from "../../../util/s3/PutFileIntoS3";
+import { makeThumbnail, thumbnailKeyFor } from "../../../util/images/makeThumbnail";
 import { db } from "../../../util/db/db";
 
 import { randomBytes } from "crypto";
@@ -63,13 +64,28 @@ export async function POST(req: Request) {
         );
       }
 
+      // Generate the gallery thumbnail. A failure here is not fatal: the row
+      // is written without one and the wall falls back to the original, so a
+      // bad file costs quality rather than the upload.
+      let thumbKey: string | null = null;
+      try {
+        const original = Buffer.from(await file.arrayBuffer());
+        const thumbnail = await makeThumbnail(original);
+        const candidate = thumbnailKeyFor(fileKey);
+        if (await PutBufferIntoS3(thumbnail, candidate, "image/webp")) {
+          thumbKey = candidate;
+        }
+      } catch (thumbError) {
+        console.error(`Thumbnail failed for ${fileKey}:`, thumbError);
+      }
+
       // Store file info in the database
       const query = `
-        INSERT INTO "Photo" ("s3Key", "originalFilename", "tier", "createdAt") 
-        VALUES ($1, $2, $3, NOW()) 
+        INSERT INTO "Photo" ("s3Key", "originalFilename", "tier", "thumbKey", "createdAt") 
+        VALUES ($1, $2, $3, $4, NOW()) 
         RETURNING id, "s3Key"
       `;
-      const params = [fileKey, sanitizedFilename, tier.toString()];
+      const params = [fileKey, sanitizedFilename, tier.toString(), thumbKey];
       const result = await db(query, params);
 
       uploadedPhotos.push({
