@@ -13,6 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { ArrowLeft, ArrowRight } from "react-feather";
 import ViewModeHandler from "../components/Gallery/ViewModeHandler";
+import { getGalleryPhotos } from "../util/db/photos";
 
 export default async function PhotographyGallery({ searchParams }) {
   const params = await searchParams;
@@ -32,20 +33,20 @@ export default async function PhotographyGallery({ searchParams }) {
     selectedTiers = [3];
   }
 
-  // Fetch photos **on the server**
-  const tierQuery = selectedTiers.map((tier) => `photos=${tier}`).join("&");
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/photos?page=${currentPage}&${tierQuery}`,
-    {
-      cache: "no-store",
-    }
-  );
-
-  if (!res.ok) {
+  // Query the database directly. This used to fetch its own /api/photos route
+  // over HTTP from a server component, which is a round trip to itself on every
+  // render and breaks outright if NEXT_PUBLIC_BASE_URL is wrong.
+  let photos = [];
+  let totalPages = 1;
+  try {
+    ({ photos, totalPages } = await getGalleryPhotos({
+      page: currentPage,
+      tiers: selectedTiers,
+    }));
+  } catch (error) {
+    console.error("Failed to load photos:", error);
     return <p className="error-message">Failed to load photos</p>;
   }
-
-  const { photos, totalPages } = await res.json();
 
   return (
     <>
