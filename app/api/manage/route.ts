@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import getS3Client from "../../../util/s3/GetS3Client";
 import { db } from "../../../util/db/db";
-import { verifyToken } from "../../../util/auth";
+import { getCookie, verifyToken } from "../../../util/auth";
 
 // Get S3 bucket name from env
 const BUCKET_NAME = process.env.AWS_S3_BUCKET!;
@@ -10,10 +10,7 @@ const s3Client = getS3Client();
 
 /** 🗑 DELETE: Remove a photo */
 export async function DELETE(req: Request) {
-  const token = req.headers
-    .get("cookie")
-    ?.split("auth-token=")[1]
-    ?.split(";")[0];
+  const token = getCookie(req, "auth-token");
 
   if (!token || !verifyToken(token)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -60,10 +57,7 @@ export async function DELETE(req: Request) {
 
 /** 🛠️ PATCH: Update photo tier */
 export async function PATCH(req: Request) {
-  const token = req.headers
-    .get("cookie")
-    ?.split("auth-token=")[1]
-    ?.split(";")[0];
+  const token = getCookie(req, "auth-token");
 
   if (!token || !verifyToken(token)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -29,3 +29,30 @@ export async function PutFileIntoS3(file: File, key: String) {
     return false;
   }
 }
+
+/**
+ * Put an already-materialised buffer (a generated thumbnail, say) rather than
+ * an uploaded File.
+ */
+export async function PutBufferIntoS3(
+  body: Buffer,
+  key: string,
+  contentType: string
+) {
+  const s3Client = getS3Client();
+  try {
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET,
+        Key: key,
+        Body: body,
+        ContentType: contentType,
+        CacheControl: "public, max-age=31536000, immutable",
+      } as PutObjectCommandInput)
+    );
+    return true;
+  } catch (error) {
+    console.error("Error uploading buffer: ", error);
+    return false;
+  }
+}

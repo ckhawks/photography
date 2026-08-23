@@ -5,17 +5,20 @@ import "inter-ui/inter.css";
 import styles from "../page.module.scss";
 import NavigationSidebar from "../../components/NavigationSidebar";
 import { imageUrl } from "../../constants/images";
+import { getTierCounts } from "../../util/db/counts";
 
 const AboutPage = async () => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/about`, {
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
+  // was fetching its own /api/about route over HTTP from a server component
+  let tier0Count = 0;
+  let tier1Count = 0;
+  let tier2Count = 0;
+  let tier3Count = 0;
+  try {
+    ({ tier0Count, tier1Count, tier2Count, tier3Count } = await getTierCounts());
+  } catch (error) {
+    console.error("Failed to load photo counts:", error);
     return <p className="error-message">Failed to load photo counts</p>;
   }
-
-  const { tier1Count, tier2Count, tier3Count, tier0Count } = await res.json();
 
   return (
     <div className={`${styles.home} ${styles.body}`}>

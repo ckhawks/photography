@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import imageDisplayStyles from "./ImageDisplay.module.scss";
 import PhotoMetaRow from "./PhotoMetaRow";
-import { imageUrl } from "../../constants/images";
+import { imageUrl, thumbnailUrl } from "../../constants/images";
 
 const ImageDisplay = (props) => {
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -10,8 +10,7 @@ const ImageDisplay = (props) => {
   const [imageOpacitied, setImageOpacitied] = useState(false);
 
   useEffect(() => {
-    overlayOpen && (document.body.style.overflow = "hidden");
-    !overlayOpen && (document.body.style.overflow = "hidden");
+    document.body.style.overflow = overlayOpen ? "hidden" : "";
   }, [overlayOpen]);
 
   useEffect(() => {
@@ -40,9 +39,11 @@ const ImageDisplay = (props) => {
       <div className={imageDisplayStyles.thumbnail}>
         <img
           loading="lazy"
+          decoding="async"
           width={350}
           className={imageDisplayStyles["gallery-image"]}
-          src={imageUrl(props.image.s3Key)}
+          alt={props.image.originalFilename || "Photograph"}
+          src={thumbnailUrl(props.image)}
           onClick={() => {
             setOverlayOpen(!overlayOpen);
           }}
@@ -63,7 +64,7 @@ const ImageDisplay = (props) => {
             className={`${imageDisplayStyles["overlay-image"]} ${
               imageOpacitied ? imageDisplayStyles["opacity-1"] : ""
             }`}
-            alt={"alt"}
+            alt={props.image.originalFilename || "Photograph"}
             src={imageUrl(props.image.s3Key)}
           />
           <PhotoMetaRow photo={props.image} />

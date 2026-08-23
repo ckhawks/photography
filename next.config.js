@@ -1,13 +1,9 @@
 module.exports = {
+  // Self-contained build: Next traces per-route dependencies and emits its own
+  // server.js, so the server runs without node_modules. See deploy.sh.
+  output: "standalone",
+
   webpack(config, { webpack, isServer, nextRuntime }) {
-    config.resolve.fallback = {
-      // if you miss it, all the other options in fallback, specified
-      // by next.js will be dropped.
-      ...config.resolve.fallback,
-
-      fs: false, // the solution
-    };
-
     // Avoid AWS SDK Node.js require issue
     if (isServer && nextRuntime === "nodejs")
       config.plugins.push(
@@ -21,20 +17,6 @@ module.exports = {
 
     return config;
   },
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "taste-gallery.s3.us-west-1.amazonaws.com",
-        port: "",
-        pathname: "/**", // remove first slash?
-      },
-      {
-        protocol: "https",
-        hostname: "taste-images.stlr.cx",
-        port: "",
-        pathname: "/**", // remove first slash?
-      },
-    ], // https://taste-gallery.s3.us-west-1.amazonaws.com/photog/016pv4ndnwna1.webp
-  },
+  // No next/image anywhere in the app, so images.remotePatterns configured
+  // nothing. It listed taste.stlr.cx's hostnames, left over from the fork.
 };
