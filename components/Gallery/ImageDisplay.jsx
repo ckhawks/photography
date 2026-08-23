@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import imageDisplayStyles from "./ImageDisplay.module.scss";
 import PhotoMetaRow from "./PhotoMetaRow";
+import PhotoGearLine from "./PhotoGearLine";
 import { imageUrl, thumbnailUrl } from "../../constants/images";
 
 const ImageDisplay = (props) => {
@@ -68,6 +69,7 @@ const ImageDisplay = (props) => {
             src={imageUrl(props.image.s3Key)}
           />
           <PhotoMetaRow photo={props.image} />
+          <PhotoGearLine photo={props.image} />
         </div>
       )}
     </div>

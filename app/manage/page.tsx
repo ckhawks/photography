@@ -11,6 +11,7 @@ import Unauthorized from "../../components/Unauthorized";
 import { ArrowLeft, ArrowRight } from "react-feather";
 import { formatRelativeTimestamp } from "../../util/date";
 import { imageUrl, thumbnailUrl } from "../../constants/images";
+import PhotoGearEditor from "../../components/PhotoGearEditor";
 
 // const categories = await getCategories();
 
@@ -90,6 +91,20 @@ const PhotoManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const updatePhoto = async (id, changes) => {
+    const res = await fetch("/api/manage", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ...changes }),
+    });
+
+    if (!res.ok) throw new Error("Failed to update photo");
+
+    setPhotos((prev) =>
+      prev.map((photo) => (photo.id === id ? { ...photo, ...changes } : photo))
+    );
   };
 
   const updatePhotoTier = async (id, newTier) => {
@@ -173,6 +188,7 @@ const PhotoManagement = () => {
                       <option value={1}>1 - Extras</option>
                     </select>
                   </div>
+                  <PhotoGearEditor photo={photo} onSave={updatePhoto} />
                   <p>{formatRelativeTimestamp(photo.createdAt)}</p>
                 </div>
               </div>

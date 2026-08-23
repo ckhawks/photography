@@ -29,3 +29,16 @@ export async function makeThumbnail(original: Buffer) {
     .webp({ quality: THUMBNAIL_QUALITY })
     .toBuffer();
 }
+
+/**
+ * Pixel dimensions of the original, after EXIF rotation is taken into account
+ * so a portrait shot on a rotated sensor is not recorded as landscape.
+ */
+export async function readDimensions(original: Buffer) {
+  const { width, height, orientation } = await sharp(original).metadata();
+  if (!width || !height) return { width: null, height: null };
+
+  // orientations 5-8 are the quarter turns
+  const rotated = typeof orientation === "number" && orientation >= 5;
+  return rotated ? { width: height, height: width } : { width, height };
+}

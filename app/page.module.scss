@@ -852,3 +852,27 @@
   border-radius: 8px;
   width: fit-content;
 }
+
+.photoGearLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.4rem;
+  font-size: 13px;
+  color: rgb(160, 160, 160);
+}
+
+.photoGearSettings {
+  color: rgb(190, 190, 190);
+}
+
+.photoAlbumLink {
+  color: rgb(120, 120, 120);
+  text-decoration: none;
+  border-bottom: 1px solid rgb(220, 220, 220);
+
+  &:hover {
+    color: #171717;
+    border-bottom-color: rgb(150, 150, 150);
+  }
+}

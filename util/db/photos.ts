@@ -6,6 +6,15 @@ export type PhotoRow = {
   s3Key: string;
   originalFilename: string | null;
   thumbKey: string | null;
+  width: number | null;
+  height: number | null;
+  medium: string | null;
+  camera: string | null;
+  lens: string | null;
+  filmStock: string | null;
+  exif: { aperture?: number; shutter?: string; iso?: number; focalLength?: number } | null;
+  albumSlug?: string | null;
+  albumTitle?: string | null;
   createdAt: string;
   likes: number;
   tier: number | null;
@@ -63,6 +72,9 @@ export async function getGalleryPhotos({
 
   const photos = await db<PhotoRow>(
     `SELECT "Photo"."id", "Photo"."s3Key", "Photo"."thumbKey", "Photo"."originalFilename", "Photo"."createdAt",
+        "Photo"."width", "Photo"."height", "Photo"."medium", "Photo"."camera", "Photo"."lens",
+        "Photo"."filmStock", "Photo"."exif",
+        "Album"."slug" AS "albumSlug", "Album"."title" AS "albumTitle",
         COALESCE(like_counts."like_count", 0)::INTEGER AS "likes", "Photo"."tier"
        FROM "Photo"
        LEFT JOIN (
@@ -71,6 +83,8 @@ export async function getGalleryPhotos({
            GROUP BY "photoId"
        ) AS like_counts
        ON "Photo"."id" = like_counts."photoId"
+       LEFT JOIN "Album" ON "Album"."id" = "Photo"."albumId"
+           AND "Album"."visibility" <> 'draft'
        ${where}
        ORDER BY ${orderBy(sort)}
        LIMIT $1 OFFSET $2`,

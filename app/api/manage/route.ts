@@ -64,30 +64,54 @@ export async function PATCH(req: Request) {
   }
 
   try {
-    const { id, tier } = await req.json();
+    const { id, tier, medium, camera, lens, filmStock } = await req.json();
 
-    if (!id || tier === undefined) {
-      return NextResponse.json(
-        { error: "Missing photo ID or tier value" },
-        { status: 400 }
-      );
+    if (!id) {
+      return NextResponse.json({ error: "Missing photo ID" }, { status: 400 });
     }
 
-    if (![1, 2, 3].includes(tier)) {
+    if (tier !== undefined && ![1, 2, 3].includes(tier)) {
       return NextResponse.json(
         { error: "Invalid tier value. Must be 1, 2, or 3." },
         { status: 400 }
       );
     }
 
-    // Update the tier in the database
-    await db(`UPDATE "Photo" SET "tier" = $1 WHERE id = $2`, [tier, id]);
+    if (medium !== undefined && medium !== null && !["film", "digital"].includes(medium)) {
+      return NextResponse.json(
+        { error: "Invalid medium. Must be film or digital." },
+        { status: 400 }
+      );
+    }
+
+    // Only the fields actually sent are written, so editing the camera cannot
+    // wipe the film stock. Empty strings clear a field.
+    const text = (value: unknown) =>
+      typeof value === "string" && value.trim() ? value.trim() : null;
+
+    const updates: { column: string; value: unknown }[] = [];
+    if (tier !== undefined) updates.push({ column: "tier", value: tier });
+    if (medium !== undefined) updates.push({ column: "medium", value: medium || null });
+    if (camera !== undefined) updates.push({ column: "camera", value: text(camera) });
+    if (lens !== undefined) updates.push({ column: "lens", value: text(lens) });
+    if (filmStock !== undefined) updates.push({ column: "filmStock", value: text(filmStock) });
+
+    if (!updates.length) {
+      return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+    }
+
+    await db(
+      `UPDATE "Photo" SET ${updates
+        .map((update, index) => `"${update.column}" = $${index + 1}`)
+        .join(", ")} WHERE id = $${updates.length + 1}`,
+      [...updates.map((update) => update.value), id]
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Tier Update Error:", error);
+    console.error("Photo Update Error:", error);
     return NextResponse.json(
-      { error: "Failed to update photo tier" },
+      { error: "Failed to update photo" },
       { status: 500 }
     );
   }

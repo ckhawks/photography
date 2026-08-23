@@ -55,6 +55,14 @@ const NavigationSidebar = (props) => {
           Gallery
         </Link>
         <Link
+          href={"/albums"}
+          className={`${sideBarStyles.navlink} ${
+            pathname.startsWith("/albums") ? sideBarStyles.active : ""
+          }`}
+        >
+          Albums
+        </Link>
+        <Link
           href={"/about"}
           className={`${sideBarStyles.navlink} ${
             pathname === "/about" ? sideBarStyles.active : ""

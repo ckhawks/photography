@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { PutBufferIntoS3, PutFileIntoS3 } from "../../../util/s3/PutFileIntoS3";
-import { makeThumbnail, thumbnailKeyFor } from "../../../util/images/makeThumbnail";
+import { makeThumbnail, readDimensions, thumbnailKeyFor } from "../../../util/images/makeThumbnail";
 import { db } from "../../../util/db/db";
 
 import { randomBytes } from "crypto";
@@ -68,8 +68,11 @@ export async function POST(req: Request) {
       // is written without one and the wall falls back to the original, so a
       // bad file costs quality rather than the upload.
       let thumbKey: string | null = null;
+      let width: number | null = null;
+      let height: number | null = null;
       try {
         const original = Buffer.from(await file.arrayBuffer());
+        ({ width, height } = await readDimensions(original));
         const thumbnail = await makeThumbnail(original);
         const candidate = thumbnailKeyFor(fileKey);
         if (await PutBufferIntoS3(thumbnail, candidate, "image/webp")) {
@@ -81,11 +84,11 @@ export async function POST(req: Request) {
 
       // Store file info in the database
       const query = `
-        INSERT INTO "Photo" ("s3Key", "originalFilename", "tier", "thumbKey", "createdAt") 
-        VALUES ($1, $2, $3, $4, NOW()) 
+        INSERT INTO "Photo" ("s3Key", "originalFilename", "tier", "thumbKey", "width", "height", "createdAt") 
+        VALUES ($1, $2, $3, $4, $5, $6, NOW()) 
         RETURNING id, "s3Key"
       `;
-      const params = [fileKey, sanitizedFilename, tier.toString(), thumbKey];
+      const params = [fileKey, sanitizedFilename, tier.toString(), thumbKey, width, height];
       const result = await db(query, params);
 
       uploadedPhotos.push({
