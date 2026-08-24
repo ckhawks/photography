@@ -11,7 +11,13 @@ export default function PhotoMetaRow({ photo }) {
       <span className={styles.date}>{PHOTO_TIERS[photo.tier]}</span>
       <span className={styles.date}>#{photo.id}</span>
       <LikeButton initialLikes={photo.likes} photoId={photo.id} />
-      <span className={styles.date}>
+      {/*
+        The server renders this at request time and the client re-renders it at
+        hydration time, so a photo sitting on a minute boundary reads "32
+        minutes ago" in the HTML and "33 minutes ago" on the client. The text
+        is approximate by definition, so let the server's value stand.
+      */}
+      <span className={styles.date} suppressHydrationWarning>
         {formatRelativeTimestamp(photo.createdAt)}
       </span>
     </div>
