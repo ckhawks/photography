@@ -37,6 +37,31 @@
   object-fit: contain;
 }
 
+// Text, not a control: it sits in the meta row alongside the tier and the id,
+// and the underline is the only thing marking it as clickable. Clicking
+// toggles rather than holds, which is also the only way to reach the before
+// without a keyboard.
+.before-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+
+  &:hover {
+    color: #171717;
+  }
+}
+
+.before-link-active {
+  color: #171717;
+  text-decoration-style: solid;
+}
+
 .before-image {
   position: absolute;
   top: 10px;

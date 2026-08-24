@@ -137,7 +137,28 @@ const ImageDisplay = (props) => {
           </div>
 
 
-          <PhotoMetaRow photo={props.image} hint={before ? "hold b to see it unedited" : null} />
+          <PhotoMetaRow
+            photo={props.image}
+            hint={
+              before ? (
+                // The label never changes, so the row cannot shift width when
+                // it toggles; the state shows in the underline instead.
+                <button
+                  type="button"
+                  className={`${imageDisplayStyles["before-link"]} ${
+                    showingBefore ? imageDisplayStyles["before-link-active"] : ""
+                  }`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setShowingBefore(!showingBefore);
+                  }}
+                  aria-pressed={showingBefore}
+                >
+                  hold b to see it unedited
+                </button>
+              ) : null
+            }
+          />
           <PhotoGearLine photo={props.image} />
         </div>
       )}
