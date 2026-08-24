@@ -208,7 +208,7 @@ const PhotoManagement = () => {
             <div className={adminStyles.searchBox}>
               <Search size={15} />
               <input
-                placeholder="Filename, camera, film"
+                placeholder="#id, filename, camera, film"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />

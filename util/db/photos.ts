@@ -166,6 +166,10 @@ export async function getAdminPhotos({
   const conditions: string[] = [];
   const params: unknown[] = [];
 
+  // set when the search term is a photo id, so the exact photo can be sorted
+  // above the filenames that merely contain the same digits
+  let idParam: number | null = null;
+
   if (albumId === "none") conditions.push(`"Photo"."albumId" IS NULL`);
   else if (albumId) {
     params.push(albumId);
@@ -179,12 +183,27 @@ export async function getAdminPhotos({
   }
 
   if (search.trim()) {
-    params.push(`%${search.trim()}%`);
-    conditions.push(
-      `("Photo"."originalFilename" ILIKE $${params.length}` +
-        ` OR "Photo"."camera" ILIKE $${params.length}` +
-        ` OR "Photo"."filmStock" ILIKE $${params.length})`
-    );
+    const term = search.trim();
+
+    params.push(`%${term}%`);
+    const like = params.length;
+    const matches = [
+      `"Photo"."originalFilename" ILIKE $${like}`,
+      `"Photo"."camera" ILIKE $${like}`,
+      `"Photo"."filmStock" ILIKE $${like}`,
+    ];
+
+    // The number under every tile is the photo id, so "179" or "#179" should
+    // land on that photo. Bounded to int4 because anything larger is not an id
+    // and Postgres would reject the comparison outright.
+    const id = Number(term.replace(/^#/, ""));
+    if (Number.isInteger(id) && id > 0 && id <= 2147483647) {
+      params.push(id);
+      idParam = params.length;
+      matches.push(`"Photo"."id" = $${idParam}`);
+    }
+
+    conditions.push(`(${matches.join(" OR ")})`);
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -206,7 +225,7 @@ export async function getAdminPhotos({
            SELECT "photoId", COUNT(*)::INTEGER AS "like_count" FROM "Like" GROUP BY "photoId"
        ) AS like_counts ON "Photo"."id" = like_counts."photoId"
        ${where}
-       ORDER BY "Photo"."id" DESC
+       ORDER BY ${idParam ? `("Photo"."id" = $${idParam}) DESC, ` : ""}"Photo"."id" DESC
        LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
     [...params, size, (currentPage - 1) * size]
   );
