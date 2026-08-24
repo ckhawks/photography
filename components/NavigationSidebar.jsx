@@ -82,9 +82,9 @@ const NavigationSidebar = (props) => {
         {isAuthenticated && (
           <div style={{ display: "inline-block", width: "fit-content" }}>
             <Link
-              href={"/manage"}
+              href={"/admin/photos"}
               className={`${sideBarStyles.footerlink} ${"external-link"} ${
-                pathname === "/manage" ? sideBarStyles.active : ""
+                pathname === "/admin/photos" ? sideBarStyles.active : ""
               }`}
             >
               Manage
@@ -95,9 +95,9 @@ const NavigationSidebar = (props) => {
         {isAuthenticated && (
           <div style={{ display: "inline-block", width: "fit-content" }}>
             <Link
-              href={"/shoots"}
+              href={"/admin/shoots"}
               className={`${"external-link"} ${sideBarStyles.footerlink} ${
-                pathname === "/shoots" ? sideBarStyles.active : ""
+                pathname === "/admin/shoots" ? sideBarStyles.active : ""
               }`}
             >
               Shoots
@@ -108,9 +108,9 @@ const NavigationSidebar = (props) => {
         {isAuthenticated && (
           <div style={{ display: "inline-block", width: "fit-content" }}>
             <Link
-              href={"/upload"}
+              href={"/admin/upload"}
               className={`${"external-link"} ${sideBarStyles.footerlink} ${
-                pathname === "/upload" ? sideBarStyles.active : ""
+                pathname === "/admin/upload" ? sideBarStyles.active : ""
               }`}
             >
               Upload

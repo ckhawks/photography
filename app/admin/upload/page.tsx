@@ -3,12 +3,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import "inter-ui/inter.css";
 import { Check, Image as ImageIcon, RotateCw, Upload, X } from "react-feather";
-import styles from "../page.module.scss";
+import styles from "../../page.module.scss";
 import uploadStyles from "./upload.module.scss";
-import NavigationSidebar from "../../components/NavigationSidebar";
-import Unauthorized from "../../components/Unauthorized";
-import ShootPicker from "../../components/ShootPicker";
-import { RATINGS, ratingById } from "../../constants/ratings";
+import NavigationSidebar from "../../../components/NavigationSidebar";
+import Unauthorized from "../../../components/Unauthorized";
+import ShootPicker from "../../../components/ShootPicker";
+import { RATINGS, ratingById } from "../../../constants/ratings";
 
 // Files go up one request each rather than in a single form post: a 250-frame
 // roll in one request is a timeout, and one failure loses the whole batch.
@@ -56,7 +56,7 @@ export default function UploadPhotos() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    fetch("/api/albums")
+    fetch("/api/admin/albums")
       .then((res) => (res.ok ? res.json() : { albums: [] }))
       .then((data) => setAlbums(data.albums ?? []))
       .catch((error) => console.error("Failed to load shoots:", error));
@@ -102,7 +102,7 @@ export default function UploadPhotos() {
     if (medium === "film" && filmStock.trim()) body.append("filmStock", filmStock.trim());
 
     try {
-      const res = await fetch("/api/upload", { method: "POST", body });
+      const res = await fetch("/api/admin/upload", { method: "POST", body });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `Upload failed (${res.status})`);
       setStatus(item.key, "done");
@@ -123,14 +123,14 @@ export default function UploadPhotos() {
 
     setRunning(false);
     // shoots gain photos as the run goes, so the counts in the picker are stale
-    fetch("/api/albums")
+    fetch("/api/admin/albums")
       .then((res) => (res.ok ? res.json() : { albums }))
       .then((data) => setAlbums(data.albums ?? albums))
       .catch(() => {});
   };
 
   const createShoot = async (shoot) => {
-    const res = await fetch("/api/albums", {
+    const res = await fetch("/api/admin/albums", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(shoot),

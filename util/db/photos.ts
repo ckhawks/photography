@@ -137,3 +137,84 @@ export async function getGalleryPhotos({
     currentPage,
   };
 }
+
+export type AdminQuery = {
+  page?: number;
+  pageSize?: number;
+  albumId?: number | "none" | null;
+  rating?: string | "none" | null;
+  search?: string;
+};
+
+/**
+ * Every photo, for the admin screens.
+ *
+ * Deliberately not the gallery query: this one must show what the public one
+ * hides — the okays, and anything rated don't show — or they become
+ * unreachable once rated.
+ */
+export async function getAdminPhotos({
+  page = 1,
+  pageSize = 60,
+  albumId = null,
+  rating = null,
+  search = "",
+}: AdminQuery) {
+  const size = Math.min(Math.max(pageSize, 1), 240);
+  const currentPage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+
+  if (albumId === "none") conditions.push(`"Photo"."albumId" IS NULL`);
+  else if (albumId) {
+    params.push(albumId);
+    conditions.push(`"Photo"."albumId" = $${params.length}`);
+  }
+
+  if (rating === "none") conditions.push(`"Photo"."rating" IS NULL`);
+  else if (rating) {
+    params.push(rating);
+    conditions.push(`"Photo"."rating" = $${params.length}`);
+  }
+
+  if (search.trim()) {
+    params.push(`%${search.trim()}%`);
+    conditions.push(
+      `("Photo"."originalFilename" ILIKE $${params.length}` +
+        ` OR "Photo"."camera" ILIKE $${params.length}` +
+        ` OR "Photo"."filmStock" ILIKE $${params.length})`
+    );
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const [{ count }] = await db<{ count: string }>(
+    `SELECT COUNT(*) FROM "Photo" ${where}`,
+    params
+  );
+
+  const photos = await db<PhotoRow>(
+    `SELECT "Photo"."id", "Photo"."s3Key", "Photo"."thumbKey", "Photo"."originalFilename",
+        "Photo"."createdAt", "Photo"."tier", "Photo"."rating", "Photo"."width", "Photo"."height",
+        "Photo"."medium", "Photo"."camera", "Photo"."lens", "Photo"."filmStock", "Photo"."exif",
+        "Photo"."albumId", "Album"."title" AS "albumTitle", "Album"."slug" AS "albumSlug",
+        COALESCE(like_counts."like_count", 0)::INTEGER AS "likes"
+       FROM "Photo"
+       LEFT JOIN "Album" ON "Album"."id" = "Photo"."albumId"
+       LEFT JOIN (
+           SELECT "photoId", COUNT(*)::INTEGER AS "like_count" FROM "Like" GROUP BY "photoId"
+       ) AS like_counts ON "Photo"."id" = like_counts."photoId"
+       ${where}
+       ORDER BY "Photo"."id" DESC
+       LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+    [...params, size, (currentPage - 1) * size]
+  );
+
+  return {
+    photos,
+    total: Number(count),
+    totalPages: Math.max(1, Math.ceil(Number(count) / size)),
+    currentPage,
+  };
+}

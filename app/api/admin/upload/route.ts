@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { PutBufferIntoS3, PutFileIntoS3 } from "../../../util/s3/PutFileIntoS3";
-import { makeThumbnail, readDimensions, thumbnailKeyFor } from "../../../util/images/makeThumbnail";
-import { readExif } from "../../../util/images/readExif";
-import { ratingById, tierForRating } from "../../../constants/ratings";
-import { db } from "../../../util/db/db";
+import { PutBufferIntoS3, PutFileIntoS3 } from "../../../../util/s3/PutFileIntoS3";
+import { makeThumbnail, readDimensions, thumbnailKeyFor } from "../../../../util/images/makeThumbnail";
+import { readExif } from "../../../../util/images/readExif";
+import { ratingById, tierForRating } from "../../../../constants/ratings";
+import { db } from "../../../../util/db/db";
 
 import { randomBytes } from "crypto";
-import { getCookie, verifyToken } from "../../../util/auth";
+import { getCookie, verifyToken } from "../../../../util/auth";
 
 function generateHexId(length = 8) {
   return randomBytes(length / 2).toString("hex"); // Generates 8-character hex string

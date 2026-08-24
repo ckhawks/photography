@@ -188,12 +188,223 @@
   color: rgb(160, 160, 160);
 }
 
+// dense: thumbnails are cheap now, and finding a photo beats reading its
+// controls. Everything editable lives on hover or in the panel.
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
   margin-top: 1rem;
-  align-items: start;
+}
+
+.tile {
+  position: relative;
+  aspect-ratio: 1;
+  background: #fafafa;
+  border: 1px solid rgb(232, 232, 232);
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  &:hover {
+    border-color: rgb(190, 190, 190);
+  }
+
+  &.selected {
+    border-color: #171717;
+    box-shadow: inset 0 0 0 2px #171717;
+  }
+
+  &.editing {
+    border-color: #2683ff;
+    box-shadow: inset 0 0 0 2px #2683ff;
+  }
+}
+
+// the only thing shown at rest: what this photo is rated
+.dot {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: rgb(190, 190, 190);
+
+  &[data-rating="amazing"] { background: #59c36a; }
+  &[data-rating="excellent"] { background: #4a9ee0; }
+  &[data-rating="great"] { background: #56a8a0; }
+  &[data-rating="good"] { background: #b6a63c; }
+  &[data-rating="okay"] { background: #c8963e; }
+  &[data-rating="dontshow"] { background: #7a6a6a; }
+  &[data-rating="unrated"] { background: rgba(255, 255, 255, 0.6); }
+}
+
+.tileBar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0));
+  color: #ffffff;
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 0.12s ease-in-out;
+
+  .tile:hover &,
+  .tile.editing & {
+    opacity: 1;
+  }
+}
+
+.tileName {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tileEdit {
+  border: none;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+  flex: none;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.filterSelect {
+  border: 1px solid rgb(226, 226, 226);
+  border-radius: 6px;
+  background: #ffffff;
+  color: #171717;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+}
+
+// one photo at a time, docked rather than inline
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 320px;
+  background: #ffffff;
+  border-left: 1px solid rgb(226, 226, 226);
+  box-shadow: rgba(17, 17, 26, 0.08) -4px 0 24px;
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  overflow-y: auto;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgb(238, 238, 238);
+  font-size: 13px;
+  color: rgb(143, 143, 143);
+
+  button {
+    border: none;
+    background: none;
+    color: rgb(150, 150, 150);
+    cursor: pointer;
+    display: flex;
+
+    &:hover {
+      color: #171717;
+    }
+  }
+}
+
+.panelImage {
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  background: #fafafa;
+  display: block;
+}
+
+.panelBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+
+.panelFilename {
+  font-size: 13px;
+  color: rgb(120, 120, 120);
+  word-break: break-all;
+}
+
+.panelSelect {
+  width: 100%;
+  border: 1px solid rgb(232, 232, 232);
+  border-radius: 5px;
+  padding: 8px 9px;
+  font-size: 13px;
+  font-family: "Inter", sans-serif;
+  color: #171717;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.panelFacts {
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgb(160, 160, 160);
+}
+
+.panelDelete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgb(240, 214, 210);
+  border-radius: 6px;
+  background: #ffffff;
+  color: #b03a2e;
+  padding: 9px;
+  font-size: 13px;
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+
+  &:hover {
+    background: #fffaf9;
+  }
 }
 
 .card {

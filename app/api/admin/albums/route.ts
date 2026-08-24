@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../util/db/db";
-import { getCookie, verifyToken } from "../../../util/auth";
+import { db } from "../../../../util/db/db";
+import { getCookie, verifyToken } from "../../../../util/auth";
 
 function authorized(req: Request) {
   const token = getCookie(req, "auth-token");

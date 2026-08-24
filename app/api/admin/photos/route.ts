@@ -1,13 +1,40 @@
 import { NextResponse } from "next/server";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
-import getS3Client from "../../../util/s3/GetS3Client";
-import { db } from "../../../util/db/db";
-import { getCookie, verifyToken } from "../../../util/auth";
-import { ratingById, tierForRating } from "../../../constants/ratings";
+import getS3Client from "../../../../util/s3/GetS3Client";
+import { db } from "../../../../util/db/db";
+import { getAdminPhotos } from "../../../../util/db/photos";
+import { getCookie, verifyToken } from "../../../../util/auth";
+import { ratingById, tierForRating } from "../../../../constants/ratings";
 
 // Get S3 bucket name from env
 const BUCKET_NAME = process.env.AWS_S3_BUCKET!;
 const s3Client = getS3Client();
+
+/** Every photo, hidden ones included: the admin list. */
+export async function GET(req: Request) {
+  const token = getCookie(req, "auth-token");
+  if (!token || !verifyToken(token)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { searchParams } = new URL(req.url);
+    const albumId = searchParams.get("albumId");
+
+    const result = await getAdminPhotos({
+      page: parseInt(searchParams.get("page") || "1", 10),
+      pageSize: parseInt(searchParams.get("pageSize") || "60", 10),
+      albumId: albumId === "none" ? "none" : albumId ? Number(albumId) : null,
+      rating: searchParams.get("rating"),
+      search: searchParams.get("search") ?? "",
+    });
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Error listing photos:", error);
+    return NextResponse.json({ error: "Failed to load photos" }, { status: 500 });
+  }
+}
 
 /** 🗑 DELETE: Remove a photo */
 export async function DELETE(req: Request) {

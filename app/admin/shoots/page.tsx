@@ -4,10 +4,10 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import "inter-ui/inter.css";
 import { Eye, EyeOff, FileText, Trash2 } from "react-feather";
-import styles from "../page.module.scss";
+import styles from "../../page.module.scss";
 import shootStyles from "./shoots.module.scss";
-import NavigationSidebar from "../../components/NavigationSidebar";
-import Unauthorized from "../../components/Unauthorized";
+import NavigationSidebar from "../../../components/NavigationSidebar";
+import Unauthorized from "../../../components/Unauthorized";
 
 const VISIBILITIES = [
   { value: "public", label: "Public", hint: "listed on Albums", icon: Eye },
@@ -143,7 +143,7 @@ export default function Shoots() {
   }, []);
 
   const load = () =>
-    fetch("/api/albums")
+    fetch("/api/admin/albums")
       .then((res) => (res.ok ? res.json() : { albums: [] }))
       .then((data) => setAlbums(data.albums ?? []))
       .catch((err) => setError(err.message));
@@ -155,7 +155,7 @@ export default function Shoots() {
   if (!isAuthenticated) return <Unauthorized />;
 
   const save = async (id, changes) => {
-    const res = await fetch("/api/albums", {
+    const res = await fetch("/api/admin/albums", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, ...changes }),
@@ -173,7 +173,7 @@ export default function Shoots() {
   const create = async () => {
     setError(null);
     try {
-      const res = await fetch("/api/albums", {
+      const res = await fetch("/api/admin/albums", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, shootDate }),
@@ -193,7 +193,7 @@ export default function Shoots() {
     if (!confirm("Delete this shoot?")) return;
     setError(null);
     try {
-      const res = await fetch("/api/albums", {
+      const res = await fetch("/api/admin/albums", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
