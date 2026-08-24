@@ -50,18 +50,10 @@
   object-fit: contain;
   background: white;
   opacity: 0;
-  transition: opacity 0.08s ease-in-out;
+  // No transition: a fade turns a straighten into a dissolve, and the point of
+  // swapping in place is that the edges jump.
 }
 
-.holdable {
-  cursor: grab;
-  user-select: none;
-  -webkit-user-select: none;
-
-  &:active {
-    cursor: grabbing;
-  }
-}
 
 
 .opacity-1 {

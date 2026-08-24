@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { Eye } from "react-feather";
+import { useEffect, useState } from "react";
 import imageDisplayStyles from "./ImageDisplay.module.scss";
 import PhotoMetaRow from "./PhotoMetaRow";
 import PhotoGearLine from "./PhotoGearLine";
@@ -28,8 +27,6 @@ const ImageDisplay = (props) => {
   }, [overlayOpen]);
 
   const before = props.image.beforeS3Key;
-  const holdTimer = useRef(null);
-  const heldLongEnough = useRef(false);
 
   // Hold b to see the unedited version, release to come back -- the same
   // gesture the film reviewer uses, so the two tools behave alike. Releasing
@@ -61,26 +58,6 @@ const ImageDisplay = (props) => {
     if (!overlayOpen) setShowingBefore(false);
   }, [overlayOpen]);
 
-  // Pointer equivalent of holding b. A short press stays a click and closes the
-  // lightbox as it always has; past the threshold it becomes a hold instead,
-  // and the release is swallowed so letting go does not also close.
-  const HOLD_MS = 180;
-
-  const startHold = () => {
-    if (!before) return;
-    heldLongEnough.current = false;
-    holdTimer.current = setTimeout(() => {
-      heldLongEnough.current = true;
-      setShowingBefore(true);
-    }, HOLD_MS);
-  };
-
-  const endHold = () => {
-    clearTimeout(holdTimer.current);
-    setShowingBefore(false);
-  };
-
-  useEffect(() => () => clearTimeout(holdTimer.current), []);
 
   useEffect(() => {
     if (overlayOpen) {
@@ -140,17 +117,7 @@ const ImageDisplay = (props) => {
           <div
             className={`${imageDisplayStyles["overlay-frame"]} ${
               imageOpacitied ? imageDisplayStyles["opacity-1"] : ""
-            } ${before ? imageDisplayStyles["holdable"] : ""}`}
-            onPointerDown={startHold}
-            onPointerUp={endHold}
-            onPointerLeave={endHold}
-            onPointerCancel={endHold}
-            onClick={(event) => {
-              if (heldLongEnough.current) {
-                heldLongEnough.current = false;
-                event.stopPropagation();
-              }
-            }}
+            }`}
           >
             <img
               className={imageDisplayStyles["overlay-image"]}
@@ -170,7 +137,7 @@ const ImageDisplay = (props) => {
           </div>
 
 
-          <PhotoMetaRow photo={props.image} hint={before ? "hold to see it unedited" : null} />
+          <PhotoMetaRow photo={props.image} hint={before ? "hold b to see it unedited" : null} />
           <PhotoGearLine photo={props.image} />
         </div>
       )}
