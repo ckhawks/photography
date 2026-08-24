@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export default function ViewModeHandler({ view }) {
   const size = useWindowSize();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -16,7 +17,11 @@ export default function ViewModeHandler({ view }) {
       const params = new URLSearchParams(searchParams.toString());
       if (params.get("view") !== "column") {
         params.set("view", "column");
-        router.replace(`/?${params.toString()}`);
+        // The path has to come from usePathname. This wrote a literal "/",
+        // which is invisible on the gallery and threw the slug away
+        // everywhere else — opening an album on a phone bounced you to the
+        // gallery, because forcing column view rewrote the whole URL.
+        router.replace(`${pathname}?${params.toString()}`);
       }
     }
   }, [size]);
