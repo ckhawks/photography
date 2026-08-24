@@ -95,6 +95,19 @@ const NavigationSidebar = (props) => {
         {isAuthenticated && (
           <div style={{ display: "inline-block", width: "fit-content" }}>
             <Link
+              href={"/shoots"}
+              className={`${"external-link"} ${sideBarStyles.footerlink} ${
+                pathname === "/shoots" ? sideBarStyles.active : ""
+              }`}
+            >
+              Shoots
+            </Link>
+          </div>
+        )}
+
+        {isAuthenticated && (
+          <div style={{ display: "inline-block", width: "fit-content" }}>
+            <Link
               href={"/upload"}
               className={`${"external-link"} ${sideBarStyles.footerlink} ${
                 pathname === "/upload" ? sideBarStyles.active : ""
