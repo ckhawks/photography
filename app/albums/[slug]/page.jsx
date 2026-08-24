@@ -2,6 +2,8 @@ import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, EyeOff } from "react-feather";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircle } from "@fortawesome/free-solid-svg-icons";
 import styles from "../../page.module.scss";
 import albumStyles from "./album.module.scss";
 import NavigationSidebar from "../../../components/NavigationSidebar";
@@ -106,19 +108,43 @@ export default async function Album({ params, searchParams }) {
           */}
           {allPhotos.length > 1 && (
             <div className={albumStyles.controls}>
-            <div className={albumStyles.sort}>
-              <Link
-                href={`/albums/${slug}${medium ? `?medium=${medium}` : ""}`}
-                className={`${albumStyles.sortLink} ${sort === "best" ? albumStyles.sortActive : ""}`}
-              >
-                Best first
-              </Link>
-              <Link
-                href={`/albums/${slug}?sort=chronological${medium ? `&medium=${medium}` : ""}`}
-                className={`${albumStyles.sortLink} ${sort === "chronological" ? albumStyles.sortActive : ""}`}
-              >
-                In order
-              </Link>
+            {/*
+              The same controls-group shell as the medium and view chips. It was
+              its own pill with its own border, its own margin and no label, so
+              in a row of three it sat lower than the other two and read as a
+              different kind of control.
+            */}
+            <div className={styles["controls-group"]}>
+              <div className={styles["controls-label"]}>Sort</div>
+              <div className={styles["controls-buttons"]}>
+                {[
+                  { id: "best", label: "Best first" },
+                  { id: "chronological", label: "In order" },
+                ].map((option) => {
+                  const next = new URLSearchParams([
+                    ...(option.id === "chronological" ? [["sort", "chronological"]] : []),
+                    ...(medium ? [["medium", medium]] : []),
+                    ...(view === "column" ? [["view", "column"]] : []),
+                  ]);
+                  const query = next.toString();
+                  return (
+                    <Link
+                      key={option.id}
+                      href={query ? `/albums/${slug}?${query}` : `/albums/${slug}`}
+                      className={`${styles["control-button"]} ${
+                        sort === option.id ? styles.active : ""
+                      }`}
+                      replace
+                      scroll={false}
+                    >
+                      {option.label}
+                      {sort === option.id && (
+                        <FontAwesomeIcon icon={faCircle} className={styles["circle"]} />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
             {isMixed && (
               <MediumControls

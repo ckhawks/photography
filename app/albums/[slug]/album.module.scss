@@ -140,44 +140,16 @@
 }
 
 // how this shoot is arranged: by judgement, or as it happened
+// A left-aligned row of equal controls. space-between pushed sort and view to
+// opposite edges, which reads as two unrelated things rather than one row --
+// and with a third control between them they scattered.
 .controls {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.25rem;
+  align-items: stretch;
+  gap: 0.5rem;
   flex-wrap: wrap;
-}
-
-.sort {
-  display: flex;
-  gap: 4px;
   margin-top: 1.5rem;
-  border: 1px solid #f1f1f1;
-  border-radius: 8px;
-  padding: 4px;
-  width: fit-content;
 }
 
-.sortLink {
-  border-radius: 4px;
-  padding: 7px 14px;
-  font-size: 14px;
-  color: rgb(105, 105, 105);
-  text-decoration: none;
 
-  &:hover {
-    background: rgb(244, 244, 244);
-    color: #171717;
-  }
-}
 
-.sortActive {
-  background: #000000;
-  color: #ffffff;
-  font-weight: 600;
-
-  &:hover {
-    background: #000000;
-    color: #ffffff;
-  }
-}

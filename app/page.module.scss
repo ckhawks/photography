@@ -409,7 +409,10 @@
   padding: 0rem 1.25rem;
   // padding-right: 0.75rem;
   // border-radius: 100px 0px 0px 100px;
-  height: 100%;
+  // stretch, not height: 100%. The group centres its children, so the
+  // label sized to its own text and its grey panel stopped short of the
+  // group's height wherever the buttons beside it were taller.
+  align-self: stretch;
   display: flex;
   align-items: center;
   background-color: rgb(249, 249, 249);
