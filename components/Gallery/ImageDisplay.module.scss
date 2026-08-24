@@ -63,6 +63,12 @@
   text-decoration-style: solid;
 }
 
+// Same specificity as .opacity-1, so source order alone decided whether the
+// lightbox ever became visible. This does not depend on it.
+.overlay-frame.opacity-1 {
+  opacity: 1;
+}
+
 .before-image {
   position: absolute;
   top: 10px;
@@ -76,8 +82,14 @@
   object-fit: contain;
   background: white;
   opacity: 0;
+  // hidden but still on top, so without this it swallows the click that closes
+  pointer-events: none;
   // No transition: a fade turns a straighten into a dissolve, and the point of
   // swapping in place is that the edges jump.
+}
+
+.before-image.opacity-1 {
+  opacity: 1;
 }
 
 
