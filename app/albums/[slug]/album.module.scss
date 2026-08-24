@@ -81,3 +81,51 @@
     padding-bottom: 0;
   }
 }
+
+// "Want more?": the okay frames, published but not put in front of anyone
+.more {
+  margin-top: 3rem;
+  border-top: 1px solid rgb(235, 235, 235);
+  padding-top: 1.5rem;
+}
+
+.moreSummary {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 19px;
+  font-weight: 600;
+  color: #171717;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  // a chevron that turns, rather than the browser's default triangle
+  &::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid rgb(120, 120, 120);
+    border-bottom: 2px solid rgb(120, 120, 120);
+    transform: rotate(-45deg) translateY(-2px);
+    transition: transform 0.2s ease-in-out;
+    flex: none;
+  }
+
+  &:hover::before {
+    border-color: #171717;
+  }
+}
+
+.more[open] .moreSummary::before {
+  transform: rotate(45deg) translateY(-3px);
+}
+
+.moreCount {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgb(143, 143, 143);
+}

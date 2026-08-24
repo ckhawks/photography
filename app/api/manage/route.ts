@@ -3,6 +3,7 @@ import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import getS3Client from "../../../util/s3/GetS3Client";
 import { db } from "../../../util/db/db";
 import { getCookie, verifyToken } from "../../../util/auth";
+import { ratingById, tierForRating } from "../../../constants/ratings";
 
 // Get S3 bucket name from env
 const BUCKET_NAME = process.env.AWS_S3_BUCKET!;
@@ -64,7 +65,7 @@ export async function PATCH(req: Request) {
   }
 
   try {
-    const { id, tier, medium, camera, lens, filmStock, albumId } = await req.json();
+    const { id, tier, rating, medium, camera, lens, filmStock, albumId } = await req.json();
 
     if (!id) {
       return NextResponse.json({ error: "Missing photo ID" }, { status: 400 });
@@ -75,6 +76,10 @@ export async function PATCH(req: Request) {
         { error: "Invalid tier value. Must be 1, 2, or 3." },
         { status: 400 }
       );
+    }
+
+    if (rating !== undefined && rating !== null && !ratingById(rating)) {
+      return NextResponse.json({ error: "Unknown rating" }, { status: 400 });
     }
 
     if (medium !== undefined && medium !== null && !["film", "digital"].includes(medium)) {
@@ -91,6 +96,14 @@ export async function PATCH(req: Request) {
 
     const updates: { column: string; value: unknown }[] = [];
     if (tier !== undefined) updates.push({ column: "tier", value: tier });
+
+    // setting a rating sets the tier with it, so the two cannot drift apart.
+    // dontshow has no tier: nothing published should carry it.
+    if (rating !== undefined) {
+      updates.push({ column: "rating", value: rating || null });
+      const derived = tierForRating(rating);
+      if (derived) updates.push({ column: "tier", value: derived });
+    }
     if (medium !== undefined) updates.push({ column: "medium", value: medium || null });
     if (camera !== undefined) updates.push({ column: "camera", value: text(camera) });
     if (lens !== undefined) updates.push({ column: "lens", value: text(lens) });

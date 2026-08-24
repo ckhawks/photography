@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { PutBufferIntoS3, PutFileIntoS3 } from "../../../util/s3/PutFileIntoS3";
 import { makeThumbnail, readDimensions, thumbnailKeyFor } from "../../../util/images/makeThumbnail";
 import { readExif } from "../../../util/images/readExif";
+import { ratingById, tierForRating } from "../../../constants/ratings";
 import { db } from "../../../util/db/db";
 
 import { randomBytes } from "crypto";
@@ -34,7 +35,10 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const files = formData.getAll("files") as File[];
-    const tier = parseInt(formData.get("tier") as string);
+    // the batch's rating decides its tier; tier alone still works for anything
+    // uploaded without a judgement attached
+    const rating = (formData.get("rating") as string) || null;
+    const tier = rating ? tierForRating(rating) : parseInt(formData.get("tier") as string);
 
     // Batch settings. The client sends one file per request so a failure costs
     // one photo rather than the whole run, but these ride along with each.
@@ -47,7 +51,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No files uploaded" }, { status: 400 });
     }
 
-    if (![1, 2, 3].includes(tier)) {
+    if (rating && !ratingById(rating)) {
+      return NextResponse.json({ error: "Unknown rating" }, { status: 400 });
+    }
+
+    if (rating === "dontshow") {
+      return NextResponse.json(
+        { error: "That photo is rated don't show; it is not meant to be uploaded." },
+        { status: 400 }
+      );
+    }
+
+    if (!tier || ![1, 2, 3].includes(tier)) {
       return NextResponse.json(
         { error: "Invalid tier value. Must be 1, 2, or 3." },
         { status: 400 }
@@ -105,15 +120,16 @@ export async function POST(req: Request) {
 
       // Store file info in the database
       const query = `
-        INSERT INTO "Photo" ("s3Key", "originalFilename", "tier", "thumbKey", "width", "height",
+        INSERT INTO "Photo" ("s3Key", "originalFilename", "tier", "rating", "thumbKey", "width", "height",
                              "albumId", "medium", "filmStock", "camera", "lens", "takenAt", "exif", "createdAt") 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::jsonb, NOW()) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::jsonb, NOW()) 
         RETURNING id, "s3Key", "thumbKey"
       `;
       const params = [
         fileKey,
         sanitizedFilename,
         tier.toString(),
+        rating,
         thumbKey,
         width,
         height,

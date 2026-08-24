@@ -292,3 +292,48 @@
     position: static;
   }
 }
+
+// six ratings do not fit a segmented row, and each wants its consequence
+// spelled out, so they stack
+.ratingList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ratingButton {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid rgb(232, 232, 232);
+  border-radius: 6px;
+  background: #ffffff;
+  color: #171717;
+  padding: 8px 11px;
+  font-size: 13px;
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+
+  &:hover {
+    background: rgb(246, 246, 246);
+  }
+
+  &.active {
+    background: #000000;
+    border-color: #000000;
+    color: #ffffff;
+    font-weight: 600;
+  }
+}
+
+.ratingWhere {
+  font-size: 11px;
+  color: rgb(160, 160, 160);
+
+  .active & {
+    color: rgba(255, 255, 255, 0.7);
+  }
+}

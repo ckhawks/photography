@@ -1,5 +1,6 @@
 import { db } from "./db";
 import type { PhotoRow } from "./photos";
+import { isTuckedAway, RATINGS } from "../../constants/ratings";
 
 export type AlbumRow = {
   id: number;
@@ -82,9 +83,14 @@ export async function getAlbumBySlug(slug: string) {
 
   if (!album) return null;
 
+  // best first: amazing, excellent, great, good, then okay. Photos with no
+  // rating fall back to their tier, which is all the older ones have.
+  const rankCases = RATINGS.map((rating) => `WHEN '${rating.id}' THEN ${rating.rank}`).join(" ");
+
   const photos = await db<PhotoRow>(
     `SELECT p."id", p."s3Key", p."thumbKey", p."originalFilename", p."createdAt", p."tier",
         p."width", p."height", p."medium", p."camera", p."lens", p."filmStock", p."exif",
+        p."rating",
         COALESCE(like_counts."like_count", 0)::INTEGER AS "likes"
        FROM "Photo" p
        LEFT JOIN (
@@ -93,9 +99,16 @@ export async function getAlbumBySlug(slug: string) {
             GROUP BY "photoId"
        ) AS like_counts ON p."id" = like_counts."photoId"
       WHERE p."albumId" = $1
-      ORDER BY p."tier" DESC NULLS LAST, p."id" ASC`,
+      ORDER BY (CASE p."rating" ${rankCases} ELSE NULL END) DESC NULLS LAST,
+               p."tier" DESC NULLS LAST,
+               p."id" ASC`,
     [album.id]
   );
 
-  return { album, photos };
+  // okay is published but not shown outright: it sits behind "Want more?"
+  return {
+    album,
+    photos: photos.filter((photo) => !isTuckedAway(photo.rating)),
+    more: photos.filter((photo) => isTuckedAway(photo.rating)),
+  };
 }

@@ -12,6 +12,7 @@ export type PhotoRow = {
   camera: string | null;
   lens: string | null;
   filmStock: string | null;
+  rating: string | null;
   exif: { aperture?: number; shutter?: string; iso?: number; focalLength?: number } | null;
   albumId?: number | null;
   albumSlug?: string | null;
@@ -74,7 +75,7 @@ export async function getGalleryPhotos({
   const photos = await db<PhotoRow>(
     `SELECT "Photo"."id", "Photo"."s3Key", "Photo"."thumbKey", "Photo"."originalFilename", "Photo"."createdAt",
         "Photo"."width", "Photo"."height", "Photo"."medium", "Photo"."camera", "Photo"."lens",
-        "Photo"."filmStock", "Photo"."exif",
+        "Photo"."filmStock", "Photo"."exif", "Photo"."rating",
         "Photo"."albumId", "Album"."slug" AS "albumSlug", "Album"."title" AS "albumTitle",
         COALESCE(like_counts."like_count", 0)::INTEGER AS "likes", "Photo"."tier"
        FROM "Photo"

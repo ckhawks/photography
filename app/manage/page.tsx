@@ -13,12 +13,11 @@ import { thumbnailUrl } from "../../constants/images";
 import PhotoGearEditor from "../../components/PhotoGearEditor";
 import ShootPicker from "../../components/ShootPicker";
 import { normalizeCamera } from "../../util/images/normalizeGear";
+import { RATINGS, ratingById } from "../../constants/ratings";
 
-const TIERS = [
-  { value: 3, label: "Showcase" },
-  { value: 2, label: "Notable" },
-  { value: 1, label: "Extras" },
-];
+// best first. Don't-show is offered too: it is how a photo that should never
+// have gone up gets marked before it is deleted.
+const RATING_CHOICES = [...RATINGS].reverse();
 
 const PhotoManagement = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -171,6 +170,8 @@ const PhotoManagement = () => {
     );
   }, [photos, search]);
 
+  const unrated = useMemo(() => photos.filter((photo) => !photo.rating).length, [photos]);
+
   const tally = useMemo(() => {
     const counts = { 3: 0, 2: 0, 1: 0 };
     for (const photo of photos) counts[photo.tier] = (counts[photo.tier] ?? 0) + 1;
@@ -189,6 +190,7 @@ const PhotoManagement = () => {
               <h1 className={styles.title}>Manage</h1>
               <p className={manageStyles.subtitle}>
                 {tally[3]} showcase · {tally[2]} notable · {tally[1]} extras on this page
+                {unrated > 0 && ` · ${unrated} with no rating`}
               </p>
             </div>
             <div className={manageStyles.headerActions}>
@@ -218,17 +220,23 @@ const PhotoManagement = () => {
             <div className={manageStyles.selectionBar}>
               <div className={manageStyles.selectionGroup}>
                 <span className={manageStyles.selectionCount}>{selected.size} selected</span>
-                <span className={manageStyles.selectionLabel}>Set tier</span>
-                {TIERS.map((option) => (
-                  <button
-                    type="button"
-                    key={option.value}
-                    className={manageStyles.selectionButton}
-                    onClick={() => updateSelected({ tier: option.value })}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+                <span className={manageStyles.selectionLabel}>Rate</span>
+                <select
+                  className={manageStyles.selectionSelect}
+                  value=""
+                  onChange={(event) =>
+                    event.target.value && updateSelected({ rating: event.target.value })
+                  }
+                >
+                  <option value="" disabled>
+                    Set rating...
+                  </option>
+                  {RATING_CHOICES.map((option) => (
+                    <option value={option.id} key={option.id}>
+                      {option.label} · {option.where}
+                    </option>
+                  ))}
+                </select>
                 <span className={manageStyles.selectionLabel}>Shoot</span>
                 <select
                   className={manageStyles.selectionSelect}
@@ -314,18 +322,23 @@ const PhotoManagement = () => {
                     </button>
                   </div>
 
-                  <div className={manageStyles.segmented}>
-                    {TIERS.map((option) => (
-                      <button
-                        type="button"
-                        key={option.value}
-                        className={`${manageStyles.segment} ${photo.tier === option.value ? manageStyles.active : ""}`}
-                        onClick={() => updatePhoto(photo.id, { tier: option.value })}
-                      >
-                        {option.label}
-                      </button>
+                  <select
+                    className={manageStyles.ratingSelect}
+                    value={photo.rating ?? ""}
+                    onChange={(event) =>
+                      updatePhoto(photo.id, { rating: event.target.value || null })
+                    }
+                    aria-label="Rating"
+                  >
+                    <option value="">
+                      No rating · {["", "Extras", "Notable", "Showcase"][photo.tier] ?? "no tier"}
+                    </option>
+                    {RATING_CHOICES.map((option) => (
+                      <option value={option.id} key={option.id}>
+                        {option.label} · {option.where}
+                      </option>
                     ))}
-                  </div>
+                  </select>
 
                   <ShootPicker
                     albums={albums}
@@ -337,7 +350,8 @@ const PhotoManagement = () => {
                   <PhotoGearEditor photo={photo} onSave={updatePhoto} />
 
                   <div className={manageStyles.footnote}>
-                    {normalizeCamera(null, photo.camera) || "No camera"} ·{" "}
+                    {ratingById(photo.rating)?.where ?? "tier set by hand"} ·{" "}
+                    {normalizeCamera(null, photo.camera) || "no camera"} ·{" "}
                     {formatRelativeTimestamp(photo.createdAt)}
                   </div>
                 </div>

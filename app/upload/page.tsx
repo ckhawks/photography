@@ -8,17 +8,15 @@ import uploadStyles from "./upload.module.scss";
 import NavigationSidebar from "../../components/NavigationSidebar";
 import Unauthorized from "../../components/Unauthorized";
 import ShootPicker from "../../components/ShootPicker";
+import { RATINGS, ratingById } from "../../constants/ratings";
 
 // Files go up one request each rather than in a single form post: a 250-frame
 // roll in one request is a timeout, and one failure loses the whole batch.
 // Three at a time keeps the pipe busy without swamping the box.
 const CONCURRENCY = 3;
 
-const TIERS = [
-  { value: 3, label: "Showcase" },
-  { value: 2, label: "Notable" },
-  { value: 1, label: "Extras" },
-];
+// best first, and never don't-show: that rating means the photo does not go up
+const UPLOAD_RATINGS = RATINGS.filter((rating) => rating.tier).reverse();
 
 const FILM_STOCKS = [
   "Portra 400",
@@ -42,7 +40,7 @@ export default function UploadPhotos() {
   const [albums, setAlbums] = useState([]);
 
   const [albumId, setAlbumId] = useState(null);
-  const [tier, setTier] = useState(1);
+  const [rating, setRating] = useState("good");
   const [medium, setMedium] = useState("");
   const [filmStock, setFilmStock] = useState("");
 
@@ -97,7 +95,7 @@ export default function UploadPhotos() {
 
     const body = new FormData();
     body.append("files", item.file);
-    body.append("tier", String(tier));
+    body.append("rating", rating);
     if (albumId) body.append("albumId", String(albumId));
     if (medium) body.append("medium", medium);
     if (medium === "film" && filmStock.trim()) body.append("filmStock", filmStock.trim());
@@ -178,20 +176,23 @@ export default function UploadPhotos() {
               </div>
 
               <div className={uploadStyles.panel}>
-                <div className={uploadStyles.panelLabel}>Tier</div>
-                <div className={uploadStyles.segmented}>
-                  {TIERS.map((option) => (
+                <div className={uploadStyles.panelLabel}>Rating</div>
+                <div className={uploadStyles.ratingList}>
+                  {UPLOAD_RATINGS.map((option) => (
                     <button
                       type="button"
-                      key={option.value}
-                      className={`${uploadStyles.segment} ${tier === option.value ? uploadStyles.active : ""}`}
-                      onClick={() => setTier(option.value)}
+                      key={option.id}
+                      className={`${uploadStyles.ratingButton} ${rating === option.id ? uploadStyles.active : ""}`}
+                      onClick={() => setRating(option.id)}
                     >
-                      {option.label}
+                      <span>{option.label}</span>
+                      <span className={uploadStyles.ratingWhere}>{option.where}</span>
                     </button>
                   ))}
                 </div>
-                <p className={uploadStyles.hint}>Promote the keepers afterwards in Manage.</p>
+                <p className={uploadStyles.hint}>
+                  The same judgement as the film reviewer. The tier follows from it.
+                </p>
               </div>
 
               <div className={uploadStyles.panel}>
@@ -239,7 +240,7 @@ export default function UploadPhotos() {
                 {running
                   ? `Uploading ${counts.uploading ?? 0}...`
                   : waiting.length
-                    ? `Upload ${waiting.length} photo${waiting.length === 1 ? "" : "s"} · ${formatSize(totalBytes)}`
+                    ? `Upload ${waiting.length} as ${ratingById(rating)?.label.toLowerCase()} · ${formatSize(totalBytes)}`
                     : "Nothing waiting"}
               </button>
 

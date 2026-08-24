@@ -36,7 +36,7 @@ export default async function Album({ params }) {
 
   if (!result) notFound();
 
-  const { album, photos } = result;
+  const { album, photos, more } = result;
 
   return (
     <div className={`${styles.home} ${styles.body}`}>
@@ -76,10 +76,23 @@ export default async function Album({ params }) {
             </div>
           )}
 
-          {photos.length === 0 ? (
+          {photos.length === 0 && more.length === 0 ? (
             <p className={albumStyles.empty}>No photos in this shoot yet.</p>
           ) : (
             <GalleryView images={photos} />
+          )}
+
+          {/* the okay ones: published, but you have to ask for them */}
+          {more.length > 0 && (
+            <details className={albumStyles.more}>
+              <summary className={albumStyles.moreSummary}>
+                <span>Want more?</span>
+                <span className={albumStyles.moreCount}>
+                  {more.length} more from this shoot
+                </span>
+              </summary>
+              <GalleryView images={more} />
+            </details>
           )}
         </div>
       </div>

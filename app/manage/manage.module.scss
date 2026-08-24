@@ -378,3 +378,21 @@
   font-size: 14px;
   color: rgb(143, 143, 143);
 }
+
+// six ratings with their consequences spelled out do not fit as buttons
+.ratingSelect {
+  width: 100%;
+  border: 1px solid rgb(232, 232, 232);
+  border-radius: 5px;
+  padding: 7px 9px;
+  font-size: 13px;
+  font-family: "Inter", sans-serif;
+  color: #171717;
+  background: #ffffff;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: rgb(180, 180, 180);
+  }
+}
