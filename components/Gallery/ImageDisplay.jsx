@@ -28,6 +28,8 @@ const ImageDisplay = (props) => {
   }, [overlayOpen]);
 
   const before = props.image.beforeS3Key;
+  const holdTimer = useRef(null);
+  const heldLongEnough = useRef(false);
 
   // Hold b to see the unedited version, release to come back -- the same
   // gesture the film reviewer uses, so the two tools behave alike. Releasing
@@ -58,6 +60,27 @@ const ImageDisplay = (props) => {
   useEffect(() => {
     if (!overlayOpen) setShowingBefore(false);
   }, [overlayOpen]);
+
+  // Pointer equivalent of holding b. A short press stays a click and closes the
+  // lightbox as it always has; past the threshold it becomes a hold instead,
+  // and the release is swallowed so letting go does not also close.
+  const HOLD_MS = 180;
+
+  const startHold = () => {
+    if (!before) return;
+    heldLongEnough.current = false;
+    holdTimer.current = setTimeout(() => {
+      heldLongEnough.current = true;
+      setShowingBefore(true);
+    }, HOLD_MS);
+  };
+
+  const endHold = () => {
+    clearTimeout(holdTimer.current);
+    setShowingBefore(false);
+  };
+
+  useEffect(() => () => clearTimeout(holdTimer.current), []);
 
   useEffect(() => {
     if (overlayOpen) {
@@ -117,7 +140,17 @@ const ImageDisplay = (props) => {
           <div
             className={`${imageDisplayStyles["overlay-frame"]} ${
               imageOpacitied ? imageDisplayStyles["opacity-1"] : ""
-            }`}
+            } ${before ? imageDisplayStyles["holdable"] : ""}`}
+            onPointerDown={startHold}
+            onPointerUp={endHold}
+            onPointerLeave={endHold}
+            onPointerCancel={endHold}
+            onClick={(event) => {
+              if (heldLongEnough.current) {
+                heldLongEnough.current = false;
+                event.stopPropagation();
+              }
+            }}
           >
             <img
               className={imageDisplayStyles["overlay-image"]}
@@ -136,25 +169,8 @@ const ImageDisplay = (props) => {
             )}
           </div>
 
-          {before && (
-            <button
-              type="button"
-              className={`${imageDisplayStyles["before-toggle"]} ${
-                showingBefore ? imageDisplayStyles["before-active"] : ""
-              }`}
-              onClick={(event) => {
-                event.stopPropagation();
-                setShowingBefore(!showingBefore);
-              }}
-              title="Hold b to compare"
-            >
-              <Eye size={13} />
-              {showingBefore ? "Before" : "See before"}
-              <span className={imageDisplayStyles["before-key"]}>b</span>
-            </button>
-          )}
 
-          <PhotoMetaRow photo={props.image} />
+          <PhotoMetaRow photo={props.image} hint={before ? "hold to see it unedited" : null} />
           <PhotoGearLine photo={props.image} />
         </div>
       )}
