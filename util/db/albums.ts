@@ -1,6 +1,6 @@
 import { db } from "./db";
 import type { PhotoRow } from "./photos";
-import { isTuckedAway, RATINGS } from "../../constants/ratings";
+import { HIDDEN_TIER, isTuckedAway, RATINGS } from "../../constants/ratings";
 
 export type AlbumRow = {
   id: number;
@@ -31,7 +31,7 @@ export async function getAlbumsWithPreviews(): Promise<AlbumWithPreview[]> {
         COUNT(p."id")::INTEGER AS "photoCount",
         COUNT(p."id") FILTER (WHERE p."tier" IS NOT NULL)::INTEGER AS "editedCount"
        FROM "Album" a
-       LEFT JOIN "Photo" p ON p."albumId" = a."id"
+       LEFT JOIN "Photo" p ON p."albumId" = a."id" AND p."tier" <> ${HIDDEN_TIER}
       WHERE a."visibility" = 'public'
       GROUP BY a."id"
       ORDER BY a."shootDate" DESC, a."id" DESC`
@@ -49,7 +49,7 @@ export async function getAlbumsWithPreviews(): Promise<AlbumWithPreview[]> {
                ORDER BY p."tier" DESC NULLS LAST, p."id" ASC
              ) AS rank
            FROM "Photo" p
-          WHERE p."albumId" = ANY($1)
+          WHERE p."albumId" = ANY($1) AND p."tier" <> ${HIDDEN_TIER}
        ) ranked
       WHERE rank <= $2`,
     [albums.map((album) => album.id), PREVIEW_COUNT]
@@ -75,7 +75,7 @@ export async function getAlbumBySlug(slug: string) {
         COUNT(p."id")::INTEGER AS "photoCount",
         COUNT(p."id") FILTER (WHERE p."tier" IS NOT NULL)::INTEGER AS "editedCount"
        FROM "Album" a
-       LEFT JOIN "Photo" p ON p."albumId" = a."id"
+       LEFT JOIN "Photo" p ON p."albumId" = a."id" AND p."tier" <> ${HIDDEN_TIER}
       WHERE a."slug" = $1 AND a."visibility" = ANY($2)
       GROUP BY a."id"`,
     [slug, PUBLIC_VISIBILITY]
@@ -98,7 +98,7 @@ export async function getAlbumBySlug(slug: string) {
              FROM "Like"
             GROUP BY "photoId"
        ) AS like_counts ON p."id" = like_counts."photoId"
-      WHERE p."albumId" = $1
+      WHERE p."albumId" = $1 AND p."tier" <> ${HIDDEN_TIER}
       ORDER BY (CASE p."rating" ${rankCases} ELSE NULL END) DESC NULLS LAST,
                p."tier" DESC NULLS LAST,
                p."id" ASC`,

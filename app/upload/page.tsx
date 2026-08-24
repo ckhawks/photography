@@ -40,7 +40,8 @@ export default function UploadPhotos() {
   const [albums, setAlbums] = useState([]);
 
   const [albumId, setAlbumId] = useState(null);
-  const [rating, setRating] = useState("good");
+  // everything comes in as okay: hide what should not be there, then rate up
+  const [rating, setRating] = useState("okay");
   const [medium, setMedium] = useState("");
   const [filmStock, setFilmStock] = useState("");
 
@@ -191,7 +192,8 @@ export default function UploadPhotos() {
                   ))}
                 </div>
                 <p className={uploadStyles.hint}>
-                  The same judgement as the film reviewer. The tier follows from it.
+                  Okay is the default on purpose: bring everything in, hide what should not
+                  be there, then rate the rest up. The tier follows from the rating.
                 </p>
               </div>
 

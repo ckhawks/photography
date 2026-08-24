@@ -102,7 +102,8 @@ export async function PATCH(req: Request) {
     if (rating !== undefined) {
       updates.push({ column: "rating", value: rating || null });
       const derived = tierForRating(rating);
-      if (derived) updates.push({ column: "tier", value: derived });
+      // 0 is a real tier (hidden), so this cannot be a truthiness check
+      if (derived !== null) updates.push({ column: "tier", value: derived });
     }
     if (medium !== undefined) updates.push({ column: "medium", value: medium || null });
     if (camera !== undefined) updates.push({ column: "camera", value: text(camera) });

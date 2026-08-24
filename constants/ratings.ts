@@ -14,16 +14,16 @@ export type Rating = {
   id: RatingId;
   label: string;
   rank: number;
-  /** null means it is never published */
-  tier: 1 | 2 | 3 | null;
+  /** 0 is the hidden tier: on the site, but shown nowhere public */
+  tier: 0 | 1 | 2 | 3;
   where: string;
 };
 
 export const RATINGS: Rating[] = [
-  { id: "dontshow", label: "Don't show", rank: 0, tier: null, where: "not published" },
-  { id: "okay", label: "Okay", rank: 1, tier: 1, where: "behind Want more?" },
-  { id: "good", label: "Good", rank: 2, tier: 1, where: "in the album" },
-  { id: "great", label: "Great", rank: 3, tier: 1, where: "top of the album" },
+  { id: "dontshow", label: "Don't show", rank: 0, tier: 0, where: "hidden from the site" },
+  { id: "okay", label: "Okay", rank: 1, tier: 1, where: "album only, behind Want more?" },
+  { id: "good", label: "Good", rank: 2, tier: 1, where: "album, and Extras on the wall" },
+  { id: "great", label: "Great", rank: 3, tier: 1, where: "top of the album, and Extras" },
   { id: "excellent", label: "Excellent", rank: 4, tier: 2, where: "Notable, on the wall" },
   { id: "amazing", label: "Amazing", rank: 5, tier: 3, where: "Showcase, on the wall" },
 ];
@@ -34,12 +34,21 @@ export const ratingById = (id?: string | null) => (id ? BY_ID.get(id as RatingId
 
 /** Photos with no rating keep whatever tier they were given by hand. */
 export function tierForRating(id?: string | null) {
-  return ratingById(id)?.tier ?? null;
+  const rating = ratingById(id);
+  return rating ? rating.tier : null;
 }
+
+/** Tier 0 is the hidden one; every public query filters it out. */
+export const HIDDEN_TIER = 0;
 
 export function rankForRating(id?: string | null) {
   return ratingById(id)?.rank ?? -1;
 }
 
-/** Okay is published but hidden behind a disclosure, never shown outright. */
-export const isTuckedAway = (id?: string | null) => id === "okay";
+/**
+ * Okay is published but never shown outright: it appears behind its album's
+ * "Want more?" and is kept off the gallery wall even when Extras is on, where
+ * great and good do appear.
+ */
+export const TUCKED_AWAY_RATING = "okay";
+export const isTuckedAway = (id?: string | null) => id === TUCKED_AWAY_RATING;

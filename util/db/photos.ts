@@ -1,5 +1,6 @@
 import { db } from "./db";
 import { GALLERY_PAGE_SIZE } from "../../constants/pageSizes";
+import { HIDDEN_TIER, TUCKED_AWAY_RATING } from "../../constants/ratings";
 
 export type PhotoRow = {
   id: number;
@@ -61,12 +62,17 @@ export async function getGalleryPhotos({
 }: GalleryQuery): Promise<GalleryResult> {
   const currentPage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
   const offset = (currentPage - 1) * GALLERY_PAGE_SIZE;
-  const cleanTiers = tiers.filter((tier) => Number.isInteger(tier));
+  // the hidden tier is never servable, whatever the query string asks for
+  const cleanTiers = tiers.filter((tier) => Number.isInteger(tier) && tier !== HIDDEN_TIER);
+
+  // Extras on the wall means great and good, never okay: okay lives behind its
+  // album's "Want more?" and nowhere else.
+  const notTucked = `"Photo"."rating" IS DISTINCT FROM '${TUCKED_AWAY_RATING}'`;
 
   const photoParams: unknown[] = [GALLERY_PAGE_SIZE, offset];
-  let where = "";
+  let where = `WHERE ${notTucked}`;
   if (cleanTiers.length) {
-    where = `WHERE "Photo"."tier" IN (${cleanTiers
+    where += ` AND "Photo"."tier" IN (${cleanTiers
       .map((_, index) => `$${index + 3}`)
       .join(", ")})`;
     photoParams.push(...cleanTiers);
@@ -94,8 +100,10 @@ export async function getGalleryPhotos({
   );
 
   const countWhere = cleanTiers.length
-    ? `WHERE "Photo"."tier" IN (${cleanTiers.map((_, index) => `$${index + 1}`).join(", ")})`
-    : "";
+    ? `WHERE ${notTucked} AND "Photo"."tier" IN (${cleanTiers
+        .map((_, index) => `$${index + 1}`)
+        .join(", ")})`
+    : `WHERE ${notTucked}`;
   const countRows = await db<{ count: string }>(
     `SELECT COUNT(*) FROM "Photo" ${countWhere}`,
     cleanTiers
