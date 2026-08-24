@@ -1,49 +1,96 @@
 "use client";
 
-import Masonry from "react-masonry-css";
+import { useEffect, useMemo, useState } from "react";
 import ImageDisplay from "./ImageDisplay";
 import styles from "../../app/page.module.scss";
 
+// The rendered width of a photo inside a column. Only the ratio between tiles
+// matters for packing, so this needs to be about right, not exact.
+const TILE_WIDTH = 350;
+
+// Everything in a tile that is not the photo, measured off the rendered page:
+// 20px of padding around the image, a 38px meta row, and the 50px gap below.
+// A constant per tile, which is why a wall of tall photos still packs sensibly.
+const TILE_CHROME = 108;
+
+// Matches the breakpoints react-masonry-css was configured with: at most 850px
+// wide gets one column, at most 1650px gets two, wider gets three.
+const DEFAULT_COLUMNS = 3;
+
+function columnsForWidth(width) {
+  if (width <= 850) return 1;
+  if (width <= 1650) return 2;
+  return DEFAULT_COLUMNS;
+}
+
+function tileHeight(image) {
+  // Older photos predate the dimension columns; square is the safest guess.
+  const ratio = image.width && image.height ? image.height / image.width : 1;
+  return TILE_WIDTH * ratio + TILE_CHROME;
+}
+
+/**
+ * Deal photos into columns shortest-column-first, in the order they arrive.
+ *
+ * react-masonry-css dealt them round-robin — 1st, 4th, 7th into column one, 2nd,
+ * 5th, 8th into column two — which ignores how tall anything is. One portrait
+ * near the top pushed its whole column down, so the columns sheared apart and a
+ * ranked list stopped reading in rank order: you would meet the 6th best photo
+ * above the 4th. Choosing the shortest column instead keeps the columns level
+ * with each other, so scanning down the page tracks the order the query
+ * returned. The first row still fills left to right because every column starts
+ * empty and ties go to the leftmost.
+ */
+function packColumns(images, columnCount) {
+  const columns = Array.from({ length: columnCount }, () => []);
+  const heights = new Array(columnCount).fill(0);
+
+  for (const image of images) {
+    let target = 0;
+    for (let index = 1; index < columnCount; index += 1) {
+      if (heights[index] < heights[target]) target = index;
+    }
+    columns[target].push(image);
+    heights[target] += tileHeight(image);
+  }
+
+  return columns;
+}
+
 const GalleryView = ({ images }) => {
+  // Starts at the server's assumption so hydration matches, then corrects on
+  // mount. Same behaviour react-masonry-css had.
+  const [columnCount, setColumnCount] = useState(DEFAULT_COLUMNS);
+
+  useEffect(() => {
+    const update = () => setColumnCount(columnsForWidth(window.innerWidth));
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  const columns = useMemo(
+    () => packColumns(images, columnCount),
+    [images, columnCount]
+  );
+
   return (
     <>
       <div className={styles.gallery}>
-        <Masonry
-          breakpointCols={{
-            default: 3,
-            1650: 2,
-            850: 1,
-          }}
-          // breakpointCols={{
-          //   default: 3,
-          //   1280: 2,
-          //   850: 1,
-          // }}
-          className="my-masonry-grid"
-          columnClassName="my-masonry-grid_column"
-        >
-          {images.map((image) => (
-            <ImageDisplay image={image} key={image.s3Key} overlay />
-            // <img width={350} alt={"alt"} src={`/gallery1/${el}`} key={el} />
-            // <img
-            //   width={400}
-            //   alt={"alt"}
-            //   src={`../../../organizing/photog/${el}`}
-            //   key={el}
-            // />
-            // phase 1: add the animate-out class to body
-            //   use setTimeout() to wait until element is added before you add class
-            // phase 2: add to not display to whats there
-            // phase 3: add element to the dom with the appropriate incoming
-            // phase 4: add class to bring it in the right way
-            // prevent backdrop scroll: https://stackoverflow.com/a/58290739
-
-            // add fullscreen element, setTimeout() delay
-            // add class to animate opacity to cover background and become backdrop, setTimeout() delay
-            // add image in, setTimeout() delay, add class to animate image in
-            //
+        <div className="my-masonry-grid">
+          {columns.map((column, index) => (
+            <div
+              className="my-masonry-grid_column"
+              key={index}
+              // equal columns, the same inline width react-masonry-css set
+              style={{ width: `${100 / columnCount}%` }}
+            >
+              {column.map((image) => (
+                <ImageDisplay image={image} key={image.s3Key} overlay />
+              ))}
+            </div>
           ))}
-        </Masonry>
+        </div>
       </div>
       <style jsx global>
         {`
@@ -52,8 +99,6 @@ const GalleryView = ({ images }) => {
             max-width: 1210px;
           }
           .my-masonry-grid {
-            display: -webkit-box; /* Not needed if autoprefixing */
-            display: -ms-flexbox; /* Not needed if autoprefixing */
             display: flex;
             margin-left: -50px; /* gutter size offset */
             width: auto;
@@ -61,11 +106,6 @@ const GalleryView = ({ images }) => {
           .my-masonry-grid_column {
             padding-left: 50px; /* gutter size */
             background-clip: padding-box;
-          }
-
-          /* Style your items */
-          .my-masonry-grid_column > img {
-            /* change div to reference your elements you put in <Masonry> */
           }
           @media screen and (max-width: 1280px) {
             .my-masonry-grid {

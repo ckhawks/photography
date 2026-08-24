@@ -4,6 +4,17 @@ import PhotoMetaRow from "./PhotoMetaRow";
 import PhotoGearLine from "./PhotoGearLine";
 import { imageUrl, thumbnailUrl } from "../../constants/images";
 
+// The width every wall photo renders at, matched to GalleryView's packing.
+const TILE_WIDTH = 350;
+
+// Reserving the right height before the file arrives is what stops a lazily
+// loaded wall from reflowing under the reader as they scroll — and it keeps the
+// real column heights matching the ones GalleryView packed against.
+function reservedHeight(image) {
+  if (!image.width || !image.height) return undefined;
+  return Math.round((TILE_WIDTH * image.height) / image.width);
+}
+
 const ImageDisplay = (props) => {
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [showingOverlay, setShowingOverlay] = useState(false);
@@ -41,7 +52,8 @@ const ImageDisplay = (props) => {
         <img
           loading="lazy"
           decoding="async"
-          width={350}
+          width={TILE_WIDTH}
+          height={reservedHeight(props.image)}
           className={imageDisplayStyles["gallery-image"]}
           alt={props.image.originalFilename || "Photograph"}
           src={thumbnailUrl(props.image)}
