@@ -32,4 +32,9 @@
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   overflow: auto;
+  // Without this the overlay stacks at auto, so anything positioned later in
+  // the DOM paints straight over it — the manage grid's tiles, its sticky
+  // toolbar (5) and its edit panel (20) all did. Above the lightbox's 999,
+  // because the navigation should be the topmost thing on the page.
+  z-index: 1000;
 }
