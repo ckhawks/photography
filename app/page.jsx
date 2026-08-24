@@ -15,6 +15,9 @@ import { ArrowLeft, ArrowRight } from "react-feather";
 import ViewModeHandler from "../components/Gallery/ViewModeHandler";
 import { getGalleryPhotos } from "../util/db/photos";
 
+// short and URL-safe: it only has to differ between visits
+const makeSeed = () => Math.random().toString(36).slice(2, 10);
+
 export default async function PhotographyGallery({ searchParams }) {
   const params = await searchParams;
   const currentPage = params.page ? parseInt(params.page, 10) : 1;
@@ -35,8 +38,18 @@ export default async function PhotographyGallery({ searchParams }) {
     selectedTiers = [3, 2];
   }
 
+  // A shuffle needs the same seed on every page, or page 2 is drawn from a
+  // different order and photos repeat or vanish. It is made once per visit and
+  // carried in the links.
+  const seed = typeof params.seed === "string" && params.seed ? params.seed : makeSeed();
+  const sort = typeof params.sort === "string" ? params.sort : "shuffle";
+
   // carried in the pagination links below
-  const tierQuery = selectedTiers.map((tier) => `photos=${tier}`).join("&");
+  const tierQuery = [
+    ...selectedTiers.map((tier) => `photos=${tier}`),
+    `seed=${encodeURIComponent(seed)}`,
+    ...(sort !== "shuffle" ? [`sort=${encodeURIComponent(sort)}`] : []),
+  ].join("&");
 
   // Query the database directly. This used to fetch its own /api/photos route
   // over HTTP from a server component, which is a round trip to itself on every
@@ -47,6 +60,8 @@ export default async function PhotographyGallery({ searchParams }) {
     ({ photos, totalPages } = await getGalleryPhotos({
       page: currentPage,
       tiers: selectedTiers,
+      sort,
+      seed,
     }));
   } catch (error) {
     console.error("Failed to load photos:", error);

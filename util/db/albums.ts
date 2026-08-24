@@ -101,8 +101,12 @@ export async function getAlbumBySlug(slug: string) {
       WHERE p."albumId" = $1 AND p."tier" <> ${HIDDEN_TIER}
       ORDER BY (CASE p."rating" ${rankCases} ELSE NULL END) DESC NULLS LAST,
                p."tier" DESC NULLS LAST,
-               p."id" ASC`,
-    [album.id]
+               -- shuffled inside each band: frame order is the order the film
+               -- came out of the camera, not an argument about which is best.
+               -- Seeded on the album, so the shoot looks the same on every
+               -- visit rather than rearranging under the viewer.
+               md5(p."id"::text || $2::text)`,
+    [album.id, album.slug]
   );
 
   // okay is published but not shown outright: it sits behind "Want more?"
