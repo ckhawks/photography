@@ -104,13 +104,25 @@
   color: rgb(143, 143, 143);
 }
 
+// The prints sit at fixed coordinates in a 470x196 box, so a narrow screen
+// scales the whole arrangement rather than rearranging it. The outer box takes
+// the SCALED size, because transform shrinks what is painted and not the space
+// the element claims - which is what pushed the card off a phone screen.
 .pile {
   position: relative;
   flex: none;
+  width: calc(470px * var(--pile-scale, 1));
+  height: calc(196px * var(--pile-scale, 1));
+}
+
+.pileInner {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 470px;
-  // tallest print plus the largest centre offset and room for the tilt, so
-  // nothing hangs out of the card
   height: 196px;
+  transform: scale(var(--pile-scale, 1));
+  transform-origin: top left;
 }
 
 .print {
@@ -222,12 +234,45 @@
   }
 
   .pile {
-    width: 100%;
-    max-width: 470px;
     align-self: center;
   }
 
   .go {
     align-self: flex-end;
+  }
+}
+
+// a phone: smaller still, and the card gives up its padding to the photos
+@media (max-width: 560px) {
+  .pile {
+    --pile-scale: 0.62;
+  }
+
+  .card {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .cardTitle {
+    font-size: 19px;
+  }
+
+  .rail {
+    padding-bottom: 6px;
+  }
+
+  .railMonth {
+    font-size: 17px;
+  }
+
+  .railYear {
+    font-size: 15px;
+  }
+}
+
+// nothing should ever push the page sideways
+@media (max-width: 900px) {
+  .rows {
+    overflow-x: hidden;
   }
 }

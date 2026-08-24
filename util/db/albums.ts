@@ -69,7 +69,9 @@ export async function getAlbumsWithPreviews(): Promise<AlbumWithPreview[]> {
  * One shoot and its photos. Draft shoots return null so the page 404s; unlisted
  * ones resolve, which is what makes a link shareable without listing it.
  */
-export async function getAlbumBySlug(slug: string) {
+export type AlbumSort = "best" | "chronological";
+
+export async function getAlbumBySlug(slug: string, sort: AlbumSort = "best") {
   const [album] = await db<AlbumRow>(
     `SELECT a."id", a."slug", a."title", a."shootDate", a."visibility", a."showCull",
         COUNT(p."id")::INTEGER AS "photoCount",
@@ -99,13 +101,19 @@ export async function getAlbumBySlug(slug: string) {
             GROUP BY "photoId"
        ) AS like_counts ON p."id" = like_counts."photoId"
       WHERE p."albumId" = $1 AND p."tier" <> ${HIDDEN_TIER}
-      ORDER BY (CASE p."rating" ${rankCases} ELSE NULL END) DESC NULLS LAST,
+      ORDER BY ${
+        sort === "chronological"
+          ? // when it was taken where that is known, otherwise when it arrived:
+            // film carries no capture time, and its upload order follows the roll
+            `COALESCE(p."takenAt", p."createdAt") ASC, p."id" ASC`
+          : // best first, and shuffled inside each band, because frame order is
+            // the order the film came out of the camera rather than an argument
+            // about which is better. Seeded on the album so the shoot looks the
+            // same on every visit instead of rearranging under the viewer.
+            `(CASE p."rating" ${rankCases} ELSE NULL END) DESC NULLS LAST,
                p."tier" DESC NULLS LAST,
-               -- shuffled inside each band: frame order is the order the film
-               -- came out of the camera, not an argument about which is best.
-               -- Seeded on the album, so the shoot looks the same on every
-               -- visit rather than rearranging under the viewer.
-               md5(p."id"::text || $2::text)`,
+               md5(p."id"::text || $2::text)`
+      }`,
     [album.id, album.slug]
   );
 

@@ -138,3 +138,38 @@
   max-width: 46rem;
   text-wrap: pretty;
 }
+
+// how this shoot is arranged: by judgement, or as it happened
+.sort {
+  display: flex;
+  gap: 4px;
+  margin-top: 1.5rem;
+  border: 1px solid #f1f1f1;
+  border-radius: 8px;
+  padding: 4px;
+  width: fit-content;
+}
+
+.sortLink {
+  border-radius: 4px;
+  padding: 7px 14px;
+  font-size: 14px;
+  color: rgb(105, 105, 105);
+  text-decoration: none;
+
+  &:hover {
+    background: rgb(244, 244, 244);
+    color: #171717;
+  }
+}
+
+.sortActive {
+  background: #000000;
+  color: #ffffff;
+  font-weight: 600;
+
+  &:hover {
+    background: #000000;
+    color: #ffffff;
+  }
+}

@@ -80,6 +80,7 @@ export default async function Albums() {
                       </div>
 
                       <div className={albumStyles.pile}>
+                        <div className={albumStyles.pileInner}>
                         {album.preview.map((photo, index) => {
                           const spot = layout[index];
                           if (!spot) return null;
@@ -106,6 +107,7 @@ export default async function Albums() {
                             </div>
                           );
                         })}
+                        </div>
                       </div>
 
                       <ChevronRight size={20} className={albumStyles.go} />

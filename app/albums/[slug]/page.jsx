@@ -23,12 +23,14 @@ function formatShootDate(shootDate) {
   });
 }
 
-export default async function Album({ params }) {
+export default async function Album({ params, searchParams }) {
   const { slug } = await params;
+  const query = await searchParams;
+  const sort = query?.sort === "chronological" ? "chronological" : "best";
 
   let result = null;
   try {
-    result = await getAlbumBySlug(slug);
+    result = await getAlbumBySlug(slug, sort);
   } catch (error) {
     console.error("Failed to load album:", error);
     return <p className="error-message">Failed to load this shoot</p>;
@@ -73,6 +75,23 @@ export default async function Album({ params }) {
             <div className={albumStyles.unlisted}>
               <EyeOff size={13} />
               Unlisted — reachable by link, not shown on the Albums page
+            </div>
+          )}
+
+          {photos.length > 1 && (
+            <div className={albumStyles.sort}>
+              <Link
+                href={`/albums/${slug}`}
+                className={`${albumStyles.sortLink} ${sort === "best" ? albumStyles.sortActive : ""}`}
+              >
+                Best first
+              </Link>
+              <Link
+                href={`/albums/${slug}?sort=chronological`}
+                className={`${albumStyles.sortLink} ${sort === "chronological" ? albumStyles.sortActive : ""}`}
+              >
+                In order
+              </Link>
             </div>
           )}
 
