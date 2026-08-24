@@ -9,7 +9,9 @@ import GalleryView from "../../../components/Gallery/GalleryView";
 import PhotoColumn from "../../../components/Gallery/PhotoColumn";
 import ViewControls from "../../../components/Gallery/ViewControls";
 import ViewModeHandler from "../../../components/Gallery/ViewModeHandler";
+import MediumControls from "../../../components/Gallery/MediumControls";
 import { getAlbumBySlug } from "../../../util/db/albums";
+import { mediumFromParam } from "../../../constants/mediums";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -32,6 +34,7 @@ export default async function Album({ params, searchParams }) {
   const query = await searchParams;
   const sort = query?.sort === "chronological" ? "chronological" : "best";
   const view = query?.view === "column" ? "column" : "grid";
+  const medium = mediumFromParam(query?.medium);
 
   let result = null;
   try {
@@ -43,7 +46,23 @@ export default async function Album({ params, searchParams }) {
 
   if (!result) notFound();
 
-  const { album, photos, more } = result;
+  const { album, photos: allPhotos, more: allMore } = result;
+
+  // Filtered here rather than in SQL: the album query already returns the whole
+  // album so it can split the okays into "Want more?", and a second round trip
+  // to re-fetch a subset of what is already in hand buys nothing.
+  const byMedium = (list) => (medium ? list.filter((photo) => photo.medium === medium) : list);
+  const photos = byMedium(allPhotos);
+  const more = byMedium(allMore);
+
+  // The chips appear only where they can do something. Four of five albums hold
+  // one medium, and on those this is a control whose every state shows the same
+  // photos -- so it hides itself rather than being a decision to maintain.
+  const mediumCounts = [...allPhotos, ...allMore].reduce((counts, photo) => {
+    counts[photo.medium] = (counts[photo.medium] || 0) + 1;
+    return counts;
+  }, {});
+  const isMixed = mediumCounts.film > 0 && mediumCounts.digital > 0;
 
   const photosView = view === "column" ? PhotoColumn : GalleryView;
 
@@ -80,26 +99,44 @@ export default async function Album({ params, searchParams }) {
             </div>
           )}
 
-          {photos.length > 1 && (
+          {/*
+            Guarded on the unfiltered album, not the filtered view: filtering
+            down to a single photo would otherwise remove the very chips you
+            need to filter back out again.
+          */}
+          {allPhotos.length > 1 && (
             <div className={albumStyles.controls}>
             <div className={albumStyles.sort}>
               <Link
-                href={`/albums/${slug}`}
+                href={`/albums/${slug}${medium ? `?medium=${medium}` : ""}`}
                 className={`${albumStyles.sortLink} ${sort === "best" ? albumStyles.sortActive : ""}`}
               >
                 Best first
               </Link>
               <Link
-                href={`/albums/${slug}?sort=chronological`}
+                href={`/albums/${slug}?sort=chronological${medium ? `&medium=${medium}` : ""}`}
                 className={`${albumStyles.sortLink} ${sort === "chronological" ? albumStyles.sortActive : ""}`}
               >
                 In order
               </Link>
             </div>
+            {isMixed && (
+              <MediumControls
+                medium={medium}
+                basePath={`/albums/${slug}`}
+                params={[
+                  ...(sort === "chronological" ? [["sort", "chronological"]] : []),
+                  ...(view === "column" ? [["view", "column"]] : []),
+                ]}
+              />
+            )}
             <ViewControls
               view={view}
               basePath={`/albums/${slug}`}
-              params={sort === "chronological" ? [["sort", "chronological"]] : []}
+              params={[
+                ...(sort === "chronological" ? [["sort", "chronological"]] : []),
+                ...(medium ? [["medium", medium]] : []),
+              ]}
             />
             </div>
           )}

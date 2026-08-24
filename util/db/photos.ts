@@ -1,6 +1,7 @@
 import { db, getPool } from "./db";
 import { GALLERY_PAGE_SIZE } from "../../constants/pageSizes";
 import { HIDDEN_TIER, TUCKED_AWAY_RATING } from "../../constants/ratings";
+import type { MediumId } from "../../constants/mediums";
 
 export type PhotoRow = {
   id: number;
@@ -30,6 +31,8 @@ export type GalleryQuery = {
   page?: number;
   tiers?: number[];
   sort?: string;
+  /** film or digital; null shows both */
+  medium?: MediumId | null;
   /** carried in the URL so a shuffle holds still across pages */
   seed?: string;
 };
@@ -78,6 +81,7 @@ export async function getGalleryPhotos({
   tiers = [],
   sort = "shuffle",
   seed = "",
+  medium = null,
 }: GalleryQuery): Promise<GalleryResult> {
   const currentPage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
   const offset = (currentPage - 1) * GALLERY_PAGE_SIZE;
@@ -95,6 +99,11 @@ export async function getGalleryPhotos({
       .map((_, index) => `$${index + 3}`)
       .join(", ")})`;
     photoParams.push(...cleanTiers);
+  }
+  // pushed after the tiers, so the placeholder is whatever position it lands in
+  if (medium) {
+    photoParams.push(medium);
+    where += ` AND "Photo"."medium" = $${photoParams.length}`;
   }
 
   // the seed is bound only when the order actually uses it: an unused
@@ -127,14 +136,22 @@ export async function getGalleryPhotos({
     photoParams
   );
 
-  const countWhere = cleanTiers.length
-    ? `WHERE ${notTucked} AND "Photo"."tier" IN (${cleanTiers
-        .map((_, index) => `$${index + 1}`)
-        .join(", ")})`
-    : `WHERE ${notTucked}`;
+  // built separately from the page query, which starts its placeholders at $3
+  const countParams: unknown[] = [];
+  let countWhere = `WHERE ${notTucked}`;
+  if (cleanTiers.length) {
+    countWhere += ` AND "Photo"."tier" IN (${cleanTiers
+      .map((_, index) => `$${index + 1}`)
+      .join(", ")})`;
+    countParams.push(...cleanTiers);
+  }
+  if (medium) {
+    countParams.push(medium);
+    countWhere += ` AND "Photo"."medium" = $${countParams.length}`;
+  }
   const countRows = await db<{ count: string }>(
     `SELECT COUNT(*) FROM "Photo" ${countWhere}`,
-    cleanTiers
+    countParams
   );
 
   const totalCount = parseInt(countRows[0]?.count ?? "0", 10);

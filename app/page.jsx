@@ -2,6 +2,7 @@ import styles from "./page.module.scss";
 import NavigationSidebar from "../components/NavigationSidebar";
 import GalleryView from "../components/Gallery/GalleryView";
 import FilterControls from "../components/Gallery/FilterControls";
+import MediumControls from "../components/Gallery/MediumControls";
 import ImageDisplayFullWidth from "../components/Gallery/ImageDisplayFullWidth";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -15,6 +16,7 @@ import ViewModeHandler from "../components/Gallery/ViewModeHandler";
 import ViewControls from "../components/Gallery/ViewControls";
 import PhotoColumn from "../components/Gallery/PhotoColumn";
 import { getGalleryPhotos } from "../util/db/photos";
+import { mediumFromParam } from "../constants/mediums";
 
 // short and URL-safe: it only has to differ between visits
 const makeSeed = () => Math.random().toString(36).slice(2, 10);
@@ -44,13 +46,23 @@ export default async function PhotographyGallery({ searchParams }) {
   // carried in the links.
   const seed = typeof params.seed === "string" && params.seed ? params.seed : makeSeed();
   const sort = typeof params.sort === "string" ? params.sort : "shuffle";
+  const medium = mediumFromParam(params.medium);
 
   // carried in the pagination links below
   const tierQuery = [
     ...selectedTiers.map((tier) => `photos=${tier}`),
     `seed=${encodeURIComponent(seed)}`,
     ...(sort !== "shuffle" ? [`sort=${encodeURIComponent(sort)}`] : []),
+    ...(medium ? [`medium=${encodeURIComponent(medium)}`] : []),
   ].join("&");
+
+  // what the medium chips have to carry so switching does not drop the rest
+  const mediumParams = [
+    ...selectedTiers.map((tier) => ["photos", String(tier)]),
+    ["seed", seed],
+    ...(sort !== "shuffle" ? [["sort", sort]] : []),
+    ...(currentView !== "grid" ? [["view", currentView]] : []),
+  ];
 
   // Query the database directly. This used to fetch its own /api/photos route
   // over HTTP from a server component, which is a round trip to itself on every
@@ -62,6 +74,7 @@ export default async function PhotographyGallery({ searchParams }) {
       page: currentPage,
       tiers: selectedTiers,
       sort,
+      medium,
       seed,
     }));
   } catch (error) {
@@ -85,6 +98,7 @@ export default async function PhotographyGallery({ searchParams }) {
             {/* Controls Section */}
             <div className={styles["controls-section"]}>
               <FilterControls selectedTiers={selectedTiers} />
+              <MediumControls medium={medium} basePath="/" params={mediumParams} />
               <ViewControls
                 view={currentView}
                 basePath="/"
@@ -92,6 +106,7 @@ export default async function PhotographyGallery({ searchParams }) {
                   ...selectedTiers.map((tier) => ["photos", String(tier)]),
                   ["seed", seed],
                   ...(sort !== "shuffle" ? [["sort", sort]] : []),
+                  ...(medium ? [["medium", medium]] : []),
                 ]}
               />
             </div>
