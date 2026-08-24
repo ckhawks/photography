@@ -91,6 +91,10 @@ export default async function Album({ params }) {
                   {more.length} more from this shoot
                 </span>
               </summary>
+              <p className={albumStyles.moreNote}>
+                These are usually unedited &mdash; scans kept for completeness rather than
+                worked on.
+              </p>
               <GalleryView images={more} />
             </details>
           )}
