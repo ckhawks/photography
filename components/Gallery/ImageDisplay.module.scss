@@ -69,11 +69,12 @@
   opacity: 1;
 }
 
+// The explicit width and height are required: an absolutely positioned REPLACED
+// element ignores its insets when width/height are auto and falls back to the
+// file's intrinsic size. Percentages resolve against the frame's padding box.
 .before-image {
   position: absolute;
   top: 10px;
-  right: 10px;
-  bottom: 10px;
   left: 10px;
   width: calc(100% - 20px);
   height: calc(100% - 20px);
