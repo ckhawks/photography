@@ -22,6 +22,8 @@ export type PhotoRow = {
   likes: number;
   tier: number | null;
   wallRank?: number | null;
+  /** the unedited version, where the edit genuinely differs from it */
+  beforeS3Key?: string | null;
 };
 
 export type GalleryQuery = {
@@ -104,7 +106,7 @@ export async function getGalleryPhotos({
   const photos = await db<PhotoRow>(
     `SELECT "Photo"."id", "Photo"."s3Key", "Photo"."thumbKey", "Photo"."originalFilename", "Photo"."createdAt",
         "Photo"."width", "Photo"."height", "Photo"."medium", "Photo"."camera", "Photo"."lens",
-        "Photo"."filmStock", "Photo"."exif", "Photo"."rating",
+        "Photo"."filmStock", "Photo"."exif", "Photo"."rating", "Photo"."beforeS3Key",
         "Photo"."albumId", "Album"."slug" AS "albumSlug", "Album"."title" AS "albumTitle",
         COALESCE(like_counts."like_count", 0)::INTEGER AS "likes", "Photo"."tier", "Photo"."wallRank"
        FROM "Photo"
@@ -275,7 +277,7 @@ export async function getAdminPhotos({
     `SELECT "Photo"."id", "Photo"."s3Key", "Photo"."thumbKey", "Photo"."originalFilename",
         "Photo"."createdAt", "Photo"."tier", "Photo"."rating", "Photo"."width", "Photo"."height",
         "Photo"."medium", "Photo"."camera", "Photo"."lens", "Photo"."filmStock", "Photo"."exif",
-        "Photo"."albumId", "Photo"."wallRank", "Album"."title" AS "albumTitle", "Album"."slug" AS "albumSlug",
+        "Photo"."beforeS3Key", "Photo"."albumId", "Photo"."wallRank", "Album"."title" AS "albumTitle", "Album"."slug" AS "albumSlug",
         COALESCE(like_counts."like_count", 0)::INTEGER AS "likes"
        FROM "Photo"
        LEFT JOIN "Album" ON "Album"."id" = "Photo"."albumId"

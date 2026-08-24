@@ -114,7 +114,7 @@ export async function getAlbumBySlug(slug: string, sort: AlbumSort = "best") {
   const photos = await db<PhotoRow>(
     `SELECT p."id", p."s3Key", p."thumbKey", p."originalFilename", p."createdAt", p."tier",
         p."width", p."height", p."medium", p."camera", p."lens", p."filmStock", p."exif",
-        p."rating",
+        p."rating", p."beforeS3Key",
         COALESCE(like_counts."like_count", 0)::INTEGER AS "likes"
        FROM "Photo" p
        LEFT JOIN (

@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Eye } from "react-feather";
 import imageDisplayStyles from "./ImageDisplay.module.scss";
 import PhotoMetaRow from "./PhotoMetaRow";
 import PhotoGearLine from "./PhotoGearLine";
@@ -16,6 +17,7 @@ function reservedHeight(image) {
 }
 
 const ImageDisplay = (props) => {
+  const [showingBefore, setShowingBefore] = useState(false);
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [showingOverlay, setShowingOverlay] = useState(false);
   const [overlayOpacitied, setOverlayOpacitied] = useState(false);
@@ -23,6 +25,38 @@ const ImageDisplay = (props) => {
 
   useEffect(() => {
     document.body.style.overflow = overlayOpen ? "hidden" : "";
+  }, [overlayOpen]);
+
+  const before = props.image.beforeS3Key;
+
+  // Hold b to see the unedited version, release to come back -- the same
+  // gesture the film reviewer uses, so the two tools behave alike. Releasing
+  // on blur matters: alt-tabbing mid-hold never delivers the keyup, and
+  // without this you come back to a photo stuck on its before.
+  useEffect(() => {
+    if (!overlayOpen || !before) return;
+
+    const down = (event) => {
+      if (event.key === "b" || event.key === "B") setShowingBefore(true);
+    };
+    const up = (event) => {
+      if (event.key === "b" || event.key === "B") setShowingBefore(false);
+    };
+    const release = () => setShowingBefore(false);
+
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    window.addEventListener("blur", release);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", release);
+    };
+  }, [overlayOpen, before]);
+
+  // closing the lightbox must not leave the toggle latched for next time
+  useEffect(() => {
+    if (!overlayOpen) setShowingBefore(false);
   }, [overlayOpen]);
 
   useEffect(() => {
@@ -73,13 +107,53 @@ const ImageDisplay = (props) => {
             setOverlayOpen(!overlayOpen);
           }}
         >
-          <img
-            className={`${imageDisplayStyles["overlay-image"]} ${
+          {/*
+            The edit sizes the frame and the before is laid over it, rather
+            than the two swapping places. A straighten crops, so the before has
+            a different aspect ratio: let it drive the layout and the whole
+            lightbox jumps on every toggle, which reads as a glitch instead of
+            a rotation.
+          */}
+          <div
+            className={`${imageDisplayStyles["overlay-frame"]} ${
               imageOpacitied ? imageDisplayStyles["opacity-1"] : ""
             }`}
-            alt={props.image.originalFilename || "Photograph"}
-            src={imageUrl(props.image.s3Key)}
-          />
+          >
+            <img
+              className={imageDisplayStyles["overlay-image"]}
+              alt={props.image.originalFilename || "Photograph"}
+              src={imageUrl(props.image.s3Key)}
+            />
+            {before && (
+              <img
+                className={`${imageDisplayStyles["before-image"]} ${
+                  showingBefore ? imageDisplayStyles["opacity-1"] : ""
+                }`}
+                alt="Before editing"
+                src={imageUrl(before)}
+                aria-hidden={!showingBefore}
+              />
+            )}
+          </div>
+
+          {before && (
+            <button
+              type="button"
+              className={`${imageDisplayStyles["before-toggle"]} ${
+                showingBefore ? imageDisplayStyles["before-active"] : ""
+              }`}
+              onClick={(event) => {
+                event.stopPropagation();
+                setShowingBefore(!showingBefore);
+              }}
+              title="Hold b to compare"
+            >
+              <Eye size={13} />
+              {showingBefore ? "Before" : "See before"}
+              <span className={imageDisplayStyles["before-key"]}>b</span>
+            </button>
+          )}
+
           <PhotoMetaRow photo={props.image} />
           <PhotoGearLine photo={props.image} />
         </div>

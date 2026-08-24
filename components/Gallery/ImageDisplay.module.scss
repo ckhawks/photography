@@ -16,7 +16,11 @@
   flex-direction: column;
 }
 
-.overlay-image {
+// The frame is sized by the edit. The before is absolutely positioned inside
+// it, so toggling swaps pixels without moving anything.
+.overlay-frame {
+  position: relative;
+  display: flex;
   max-width: 90%;
   max-height: 90%;
   padding: 10px;
@@ -24,6 +28,66 @@
   background: white;
   opacity: 0;
   transition: opacity 0.1s ease-in-out;
+}
+
+.overlay-image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.before-image {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  bottom: 10px;
+  left: 10px;
+  width: calc(100% - 20px);
+  height: calc(100% - 20px);
+  // contain, not cover: a straighten crops, so the before is a slightly wider
+  // frame. Cropping it to fill would hide the very edges the rotation moved.
+  object-fit: contain;
+  background: white;
+  opacity: 0;
+  transition: opacity 0.08s ease-in-out;
+}
+
+.before-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 14px;
+  padding: 7px 12px;
+  border: 1px solid rgb(232, 232, 232);
+  border-radius: 6px;
+  background: white;
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  color: #171717;
+  cursor: pointer;
+
+  &:hover {
+    border-color: rgb(180, 180, 180);
+  }
+}
+
+.before-active {
+  background: #171717;
+  border-color: #171717;
+  color: white;
+}
+
+.before-key {
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.07);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.before-active .before-key {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .opacity-1 {
