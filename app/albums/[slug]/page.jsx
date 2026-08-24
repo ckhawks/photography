@@ -56,12 +56,6 @@ export default async function Album({ params, searchParams }) {
               <h1 className={albumStyles.title}>{album.title}</h1>
             </div>
             <div className={albumStyles.counts}>
-              {album.editedCount > 0 && (
-                <div>
-                  <div className={albumStyles.countValue}>{album.editedCount}</div>
-                  <div className={albumStyles.countLabel}>edited</div>
-                </div>
-              )}
               <div>
                 <div className={albumStyles.countValue}>{album.photoCount}</div>
                 <div className={albumStyles.countLabel}>

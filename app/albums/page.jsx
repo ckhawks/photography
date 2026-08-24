@@ -70,11 +70,6 @@ export default async function Albums() {
                       <div className={albumStyles.cardText}>
                         <div className={albumStyles.cardTitle}>{album.title}</div>
                         <div className={albumStyles.cardMeta}>
-                          {/* "12 edited · 36 photos" is worth saying;
-                              "14 edited · 14 photos" is just noise */}
-                          {album.editedCount > 0 &&
-                            album.editedCount < album.photoCount &&
-                            `${album.editedCount} edited · `}
                           {album.photoCount} {album.photoCount === 1 ? "photo" : "photos"}
                         </div>
                       </div>

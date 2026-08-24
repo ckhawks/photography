@@ -10,7 +10,6 @@ export type AlbumRow = {
   visibility: string;
   showCull: boolean;
   photoCount: number;
-  editedCount: number;
 };
 
 export type AlbumWithPreview = AlbumRow & { preview: PhotoRow[] };
@@ -28,8 +27,7 @@ const PUBLIC_VISIBILITY = ["public", "unlisted"];
 export async function getAlbumsWithPreviews(): Promise<AlbumWithPreview[]> {
   const albums = await db<AlbumRow>(
     `SELECT a."id", a."slug", a."title", a."shootDate", a."visibility", a."showCull",
-        COUNT(p."id")::INTEGER AS "photoCount",
-        COUNT(p."id") FILTER (WHERE p."tier" IS NOT NULL)::INTEGER AS "editedCount"
+        COUNT(p."id")::INTEGER AS "photoCount"
        FROM "Album" a
        LEFT JOIN "Photo" p ON p."albumId" = a."id" AND p."tier" <> ${HIDDEN_TIER}
       WHERE a."visibility" = 'public'
@@ -74,8 +72,7 @@ export type AlbumSort = "best" | "chronological";
 export async function getAlbumBySlug(slug: string, sort: AlbumSort = "best") {
   const [album] = await db<AlbumRow>(
     `SELECT a."id", a."slug", a."title", a."shootDate", a."visibility", a."showCull",
-        COUNT(p."id")::INTEGER AS "photoCount",
-        COUNT(p."id") FILTER (WHERE p."tier" IS NOT NULL)::INTEGER AS "editedCount"
+        COUNT(p."id")::INTEGER AS "photoCount"
        FROM "Album" a
        LEFT JOIN "Photo" p ON p."albumId" = a."id" AND p."tier" <> ${HIDDEN_TIER}
       WHERE a."slug" = $1 AND a."visibility" = ANY($2)
@@ -85,9 +82,34 @@ export async function getAlbumBySlug(slug: string, sort: AlbumSort = "best") {
 
   if (!album) return null;
 
-  // best first: amazing, excellent, great, good, then okay. Photos with no
-  // rating fall back to their tier, which is all the older ones have.
+  // best first: amazing, excellent, great, good, then okay.
+  //
+  // Tier leads and the rating breaks ties inside it, rather than the other way
+  // round. Tier is derived from the rating, so for anything the film reviewer
+  // has been through the two orders agree — but the older digital photos carry
+  // a tier and no rating at all, and ranking by rating first buried every one of
+  // them below the rated frames. New York City is the case that showed it: two
+  // showcase photos, unrated, landing under a `good`.
   const rankCases = RATINGS.map((rating) => `WHEN '${rating.id}' THEN ${rating.rank}`).join(" ");
+
+  // The ORDER BY and its parameters are built together on purpose: the two
+  // sorts do not take the same number of placeholders, and passing a param the
+  // clause does not mention makes pg reject the bind outright.
+  const [orderBy, params] =
+    sort === "chronological"
+      ? // when it was taken where that is known, otherwise when it arrived:
+        // film carries no capture time, and its upload order follows the roll
+        [`COALESCE(p."takenAt", p."createdAt") ASC, p."id" ASC`, [album.id]]
+      : // best first, and shuffled inside each band, because frame order is
+        // the order the film came out of the camera rather than an argument
+        // about which is better. Seeded on the album so the shoot looks the
+        // same on every visit instead of rearranging under the viewer.
+        [
+          `p."tier" DESC NULLS LAST,
+             (CASE p."rating" ${rankCases} ELSE NULL END) DESC NULLS LAST,
+             md5(p."id"::text || $2::text)`,
+          [album.id, album.slug],
+        ];
 
   const photos = await db<PhotoRow>(
     `SELECT p."id", p."s3Key", p."thumbKey", p."originalFilename", p."createdAt", p."tier",
@@ -101,20 +123,8 @@ export async function getAlbumBySlug(slug: string, sort: AlbumSort = "best") {
             GROUP BY "photoId"
        ) AS like_counts ON p."id" = like_counts."photoId"
       WHERE p."albumId" = $1 AND p."tier" <> ${HIDDEN_TIER}
-      ORDER BY ${
-        sort === "chronological"
-          ? // when it was taken where that is known, otherwise when it arrived:
-            // film carries no capture time, and its upload order follows the roll
-            `COALESCE(p."takenAt", p."createdAt") ASC, p."id" ASC`
-          : // best first, and shuffled inside each band, because frame order is
-            // the order the film came out of the camera rather than an argument
-            // about which is better. Seeded on the album so the shoot looks the
-            // same on every visit instead of rearranging under the viewer.
-            `(CASE p."rating" ${rankCases} ELSE NULL END) DESC NULLS LAST,
-               p."tier" DESC NULLS LAST,
-               md5(p."id"::text || $2::text)`
-      }`,
-    [album.id, album.slug]
+      ORDER BY ${orderBy}`,
+    params
   );
 
   // okay is published but not shown outright: it sits behind "Want more?"
