@@ -7,7 +7,8 @@ import { normalizeCamera, normalizeLens } from "../../util/images/normalizeGear"
 /**
  * What the photo was shot on, when anything is known. Film leads with the
  * stock, digital with the body — that is the part that means something in
- * each case. Renders nothing at all rather than an empty row.
+ * each case. Both then name the body and lens. Renders nothing at all rather
+ * than an empty row.
  */
 export default function PhotoGearLine({ photo }) {
   const parts = [];
@@ -20,6 +21,7 @@ export default function PhotoGearLine({ photo }) {
   if (photo.medium === "film") {
     if (photo.filmStock) parts.push(photo.filmStock);
     if (camera) parts.push(camera);
+    if (lens) parts.push(lens);
     if (!parts.length) parts.push("Film");
   } else {
     if (camera) parts.push(camera);
