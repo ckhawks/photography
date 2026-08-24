@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db, getPool } from "./db";
 import { GALLERY_PAGE_SIZE } from "../../constants/pageSizes";
 import { HIDDEN_TIER, TUCKED_AWAY_RATING } from "../../constants/ratings";
 
@@ -21,6 +21,7 @@ export type PhotoRow = {
   createdAt: string;
   likes: number;
   tier: number | null;
+  wallRank?: number | null;
 };
 
 export type GalleryQuery = {
@@ -54,10 +55,12 @@ function orderBy(sort: string, seedParam: string) {
     case "most_liked":
       return `COALESCE(like_counts."like_count", 0)::INTEGER DESC, "Photo"."createdAt" DESC`;
     default:
-      // shuffled, because upload order is not an argument about quality: a
-      // batch of 300 would otherwise bury everything that came before it
-      // the cast matters: Postgres cannot infer a parameter's type inside md5()
-      return `md5("Photo"."id"::text || ${seedParam}::text)`;
+      // Pinned photos lead, in the order they were pinned; everything else is
+      // shuffled behind them, because upload order is not an argument about
+      // quality -- a batch of 300 would otherwise bury everything before it.
+      // Ordering the first dozen therefore costs nothing on the other hundreds.
+      // The cast matters: Postgres cannot infer a parameter's type inside md5()
+      return `"Photo"."wallRank" ASC NULLS LAST, md5("Photo"."id"::text || ${seedParam}::text)`;
   }
 }
 
@@ -103,7 +106,7 @@ export async function getGalleryPhotos({
         "Photo"."width", "Photo"."height", "Photo"."medium", "Photo"."camera", "Photo"."lens",
         "Photo"."filmStock", "Photo"."exif", "Photo"."rating",
         "Photo"."albumId", "Album"."slug" AS "albumSlug", "Album"."title" AS "albumTitle",
-        COALESCE(like_counts."like_count", 0)::INTEGER AS "likes", "Photo"."tier"
+        COALESCE(like_counts."like_count", 0)::INTEGER AS "likes", "Photo"."tier", "Photo"."wallRank"
        FROM "Photo"
        LEFT JOIN (
            SELECT "photoId", COUNT(*)::INTEGER AS "like_count"
@@ -136,6 +139,61 @@ export async function getGalleryPhotos({
     totalPages: Math.ceil(totalCount / GALLERY_PAGE_SIZE),
     currentPage,
   };
+}
+
+/**
+ * The photos that can appear on the gallery wall, for the ordering screen.
+ *
+ * Same population the wall itself draws from -- showcase and notable, never an
+ * okay -- but in a stable order rather than a seeded shuffle, because an
+ * ordering screen that rearranges itself between visits is unusable. Pinned
+ * photos come first in their pinned order, then the rest newest first.
+ */
+export async function getWallPhotos(): Promise<PhotoRow[]> {
+  return db<PhotoRow>(
+    `SELECT "Photo"."id", "Photo"."s3Key", "Photo"."thumbKey", "Photo"."originalFilename",
+        "Photo"."createdAt", "Photo"."tier", "Photo"."rating", "Photo"."width", "Photo"."height",
+        "Photo"."medium", "Photo"."filmStock", "Photo"."wallRank",
+        "Album"."title" AS "albumTitle", "Album"."slug" AS "albumSlug",
+        0 AS "likes"
+       FROM "Photo"
+       LEFT JOIN "Album" ON "Album"."id" = "Photo"."albumId"
+      WHERE "Photo"."tier" IN (2, 3)
+        AND "Photo"."rating" IS DISTINCT FROM '${TUCKED_AWAY_RATING}'
+      ORDER BY "Photo"."wallRank" ASC NULLS LAST, "Photo"."id" DESC`
+  );
+}
+
+/**
+ * Replace the pinned order wholesale: the ids given become ranks 1..n and
+ * every other photo goes back to unpinned. Wholesale rather than incremental
+ * because "move this one to third" is a statement about the whole list, and
+ * two half-applied edits would leave duplicate ranks behind.
+ */
+export async function setWallOrder(ids: number[]) {
+  // One transaction, because the clear and the re-rank are one edit: a failure
+  // between them would leave the wall unpinned with no way to tell that was an
+  // accident.
+  const client = await getPool().connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(`UPDATE "Photo" SET "wallRank" = NULL WHERE "wallRank" IS NOT NULL`);
+    if (ids.length) {
+      await client.query(
+        `UPDATE "Photo" SET "wallRank" = pinned.ord
+           FROM unnest($1::int[]) WITH ORDINALITY AS pinned(id, ord)
+          WHERE "Photo"."id" = pinned.id`,
+        [ids]
+      );
+    }
+    await client.query("COMMIT");
+    return ids.length;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export type AdminQuery = {
@@ -217,7 +275,7 @@ export async function getAdminPhotos({
     `SELECT "Photo"."id", "Photo"."s3Key", "Photo"."thumbKey", "Photo"."originalFilename",
         "Photo"."createdAt", "Photo"."tier", "Photo"."rating", "Photo"."width", "Photo"."height",
         "Photo"."medium", "Photo"."camera", "Photo"."lens", "Photo"."filmStock", "Photo"."exif",
-        "Photo"."albumId", "Album"."title" AS "albumTitle", "Album"."slug" AS "albumSlug",
+        "Photo"."albumId", "Photo"."wallRank", "Album"."title" AS "albumTitle", "Album"."slug" AS "albumSlug",
         COALESCE(like_counts."like_count", 0)::INTEGER AS "likes"
        FROM "Photo"
        LEFT JOIN "Album" ON "Album"."id" = "Photo"."albumId"

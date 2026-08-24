@@ -51,6 +51,32 @@
   }
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// Secondary next to Upload: the same shape without the weight, because only
+// one action in a header should read as the primary one.
+.secondaryButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgb(232, 232, 232);
+  border-radius: 6px;
+  padding: 8px 15px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #171717;
+  text-decoration: none;
+
+  &:hover {
+    border-color: rgb(180, 180, 180);
+    color: #171717;
+  }
+}
+
 .uploadButton {
   display: flex;
   align-items: center;

@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import "inter-ui/inter.css";
-import { ArrowLeft, ArrowRight, Search, Trash2, Upload, X } from "react-feather";
+import { ArrowLeft, ArrowRight, Layout, Search, Trash2, Upload, X } from "react-feather";
 import styles from "../../page.module.scss";
 import adminStyles from "./photos.module.scss";
 import NavigationSidebar from "../../../components/NavigationSidebar";
@@ -198,10 +198,16 @@ const PhotoManagement = () => {
                 {(albumFilter || ratingFilter || search) && " matching"}
               </p>
             </div>
-            <Link href="/admin/upload" className={adminStyles.uploadButton}>
-              <Upload size={15} />
-              Upload
-            </Link>
+            <div className={adminStyles.headerActions}>
+              <Link href="/admin/wall" className={adminStyles.secondaryButton}>
+                <Layout size={15} />
+                Wall order
+              </Link>
+              <Link href="/admin/upload" className={adminStyles.uploadButton}>
+                <Upload size={15} />
+                Upload
+              </Link>
+            </div>
           </div>
 
           <div className={adminStyles.filters}>
