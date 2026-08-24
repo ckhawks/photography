@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "react-bootstrap";
 import { Heart } from "react-feather";
-import FingerprintJS from "@fingerprintjs/fingerprintjs";
+import { getVisitorId } from "../util/fingerprint";
 
 import localStyles from "./LikeButton.module.scss";
 import styles from "../app/page.module.scss";
@@ -13,14 +13,19 @@ export default function LikeButton({ photoId, initialLikes }) {
   const [activated, setActivated] = useState(false);
   const [fingerprintId, setFingerprintId] = useState(null);
 
-  // Generate fingerprint ID
+  // The visitor id is shared across every button on the page, so this waits on
+  // work the first mounted button already started rather than fingerprinting
+  // once per photo.
   useEffect(() => {
-    async function fetchFingerprint() {
-      const fp = await FingerprintJS.load();
-      const result = await fp.get();
-      setFingerprintId(result.visitorId);
-    }
-    fetchFingerprint();
+    let live = true;
+    getVisitorId()
+      .then((id) => {
+        if (live) setFingerprintId(id);
+      })
+      .catch((error) => console.error("Fingerprint failed:", error));
+    return () => {
+      live = false;
+    };
   }, []);
 
   // Check if user has already liked the image
