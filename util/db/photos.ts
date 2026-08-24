@@ -111,8 +111,11 @@ export async function getGalleryPhotos({
         COALESCE(like_counts."like_count", 0)::INTEGER AS "likes", "Photo"."tier", "Photo"."wallRank"
        FROM "Photo"
        LEFT JOIN (
+           -- unliking tombstones the row rather than deleting it, so every
+           -- count of likes has to ask for the ones that still stand
            SELECT "photoId", COUNT(*)::INTEGER AS "like_count"
            FROM "Like"
+           WHERE "unlikedAt" IS NULL
            GROUP BY "photoId"
        ) AS like_counts
        ON "Photo"."id" = like_counts."photoId"
@@ -282,7 +285,8 @@ export async function getAdminPhotos({
        FROM "Photo"
        LEFT JOIN "Album" ON "Album"."id" = "Photo"."albumId"
        LEFT JOIN (
-           SELECT "photoId", COUNT(*)::INTEGER AS "like_count" FROM "Like" GROUP BY "photoId"
+           SELECT "photoId", COUNT(*)::INTEGER AS "like_count" FROM "Like"
+            WHERE "unlikedAt" IS NULL GROUP BY "photoId"
        ) AS like_counts ON "Photo"."id" = like_counts."photoId"
        ${where}
        ORDER BY ${idParam ? `("Photo"."id" = $${idParam}) DESC, ` : ""}"Photo"."id" DESC

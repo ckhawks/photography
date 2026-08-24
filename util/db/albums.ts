@@ -120,6 +120,7 @@ export async function getAlbumBySlug(slug: string, sort: AlbumSort = "best") {
        LEFT JOIN (
            SELECT "photoId", COUNT(*)::INTEGER AS "like_count"
              FROM "Like"
+            WHERE "unlikedAt" IS NULL
             GROUP BY "photoId"
        ) AS like_counts ON p."id" = like_counts."photoId"
       WHERE p."albumId" = $1 AND p."tier" <> ${HIDDEN_TIER}

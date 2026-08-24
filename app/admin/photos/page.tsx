@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import "inter-ui/inter.css";
-import { ArrowLeft, ArrowRight, Layout, Search, Trash2, Upload, X } from "react-feather";
+import { ArrowLeft, ArrowRight, Heart, Layout, Search, Trash2, Upload, X } from "react-feather";
 import styles from "../../page.module.scss";
 import adminStyles from "./photos.module.scss";
 import NavigationSidebar from "../../../components/NavigationSidebar";
@@ -199,6 +199,10 @@ const PhotoManagement = () => {
               </p>
             </div>
             <div className={adminStyles.headerActions}>
+              <Link href="/admin/likes" className={adminStyles.secondaryButton}>
+                <Heart size={15} />
+                Likes
+              </Link>
               <Link href="/admin/wall" className={adminStyles.secondaryButton}>
                 <Layout size={15} />
                 Wall order
