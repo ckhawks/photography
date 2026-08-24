@@ -140,6 +140,14 @@
 }
 
 // how this shoot is arranged: by judgement, or as it happened
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
 .sort {
   display: flex;
   gap: 4px;

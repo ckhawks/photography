@@ -1,3 +1,4 @@
+import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, EyeOff } from "react-feather";
@@ -5,6 +6,9 @@ import styles from "../../page.module.scss";
 import albumStyles from "./album.module.scss";
 import NavigationSidebar from "../../../components/NavigationSidebar";
 import GalleryView from "../../../components/Gallery/GalleryView";
+import PhotoColumn from "../../../components/Gallery/PhotoColumn";
+import ViewControls from "../../../components/Gallery/ViewControls";
+import ViewModeHandler from "../../../components/Gallery/ViewModeHandler";
 import { getAlbumBySlug } from "../../../util/db/albums";
 
 export async function generateMetadata({ params }) {
@@ -27,6 +31,7 @@ export default async function Album({ params, searchParams }) {
   const { slug } = await params;
   const query = await searchParams;
   const sort = query?.sort === "chronological" ? "chronological" : "best";
+  const view = query?.view === "column" ? "column" : "grid";
 
   let result = null;
   try {
@@ -40,8 +45,11 @@ export default async function Album({ params, searchParams }) {
 
   const { album, photos, more } = result;
 
+  const photosView = view === "column" ? PhotoColumn : GalleryView;
+
   return (
     <div className={`${styles.home} ${styles.body}`}>
+      <ViewModeHandler view={view} />
       <NavigationSidebar />
       <div className={styles.all}>
         <div className={styles.container}>
@@ -73,6 +81,7 @@ export default async function Album({ params, searchParams }) {
           )}
 
           {photos.length > 1 && (
+            <div className={albumStyles.controls}>
             <div className={albumStyles.sort}>
               <Link
                 href={`/albums/${slug}`}
@@ -87,12 +96,18 @@ export default async function Album({ params, searchParams }) {
                 In order
               </Link>
             </div>
+            <ViewControls
+              view={view}
+              basePath={`/albums/${slug}`}
+              params={sort === "chronological" ? [["sort", "chronological"]] : []}
+            />
+            </div>
           )}
 
           {photos.length === 0 && more.length === 0 ? (
             <p className={albumStyles.empty}>No photos in this album yet.</p>
           ) : (
-            <GalleryView images={photos} />
+            React.createElement(photosView, { images: photos })
           )}
 
           {/* the okay ones: published, but you have to ask for them */}
@@ -107,7 +122,7 @@ export default async function Album({ params, searchParams }) {
               <p className={albumStyles.moreNote}>
                 The weaker ones &mdash; here if you want to see everything.
               </p>
-              <GalleryView images={more} />
+              {React.createElement(photosView, { images: more })}
             </details>
           )}
         </div>

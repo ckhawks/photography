@@ -7,14 +7,39 @@ import PhotoGearLine from "./PhotoGearLine";
 import { imageUrl, thumbnailUrl } from "../../constants/images";
 
 const ImageDisplayFullWidth = (props) => {
+  const [showingBefore, setShowingBefore] = useState(false);
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [showingOverlay, setShowingOverlay] = useState(false);
   const [overlayOpacitied, setOverlayOpacitied] = useState(false);
   const [imageOpacitied, setImageOpacitied] = useState(false);
 
   useEffect(() => {
-    overlayOpen && (document.body.style.overflow = "hidden");
-    !overlayOpen && (document.body.style.overflow = "hidden");
+    // both branches used to set "hidden", so closing the lightbox left the
+    // page permanently unscrollable
+    document.body.style.overflow = overlayOpen ? "hidden" : "";
+  }, [overlayOpen]);
+
+  const before = props.image.beforeS3Key;
+
+  // same gesture as the grid lightbox; blur releases so alt-tabbing mid-hold
+  // does not strand you on the before
+  useEffect(() => {
+    if (!overlayOpen || !before) return;
+    const down = (event) => { if (event.key === "b" || event.key === "B") setShowingBefore(true); };
+    const up = (event) => { if (event.key === "b" || event.key === "B") setShowingBefore(false); };
+    const release = () => setShowingBefore(false);
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    window.addEventListener("blur", release);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", release);
+    };
+  }, [overlayOpen, before]);
+
+  useEffect(() => {
+    if (!overlayOpen) setShowingBefore(false);
   }, [overlayOpen]);
 
   useEffect(() => {
@@ -63,16 +88,47 @@ const ImageDisplayFullWidth = (props) => {
             setOverlayOpen(!overlayOpen);
           }}
         >
-          <img
-            className={`${imageDisplayStyles["overlay-image"]} ${
+          <div
+            className={`${imageDisplayStyles["overlay-frame"]} ${
               imageOpacitied ? imageDisplayStyles["opacity-1"] : ""
             }`}
-            // width={350}
-            alt={props.image.originalFilename || "Photograph"}
-            // src={`/gallery1/${props.image}`}
-            src={imageUrl(props.image.s3Key)}
+          >
+            <img
+              className={imageDisplayStyles["overlay-image"]}
+              alt={props.image.originalFilename || "Photograph"}
+              src={imageUrl(props.image.s3Key)}
+            />
+            {before && (
+              <img
+                className={`${imageDisplayStyles["before-image"]} ${
+                  showingBefore ? imageDisplayStyles["opacity-1"] : ""
+                }`}
+                alt="Before editing"
+                src={imageUrl(before)}
+                aria-hidden={!showingBefore}
+              />
+            )}
+          </div>
+          <PhotoMetaRow
+            photo={props.image}
+            hint={
+              before ? (
+                <button
+                  type="button"
+                  className={`${imageDisplayStyles["before-link"]} ${
+                    showingBefore ? imageDisplayStyles["before-link-active"] : ""
+                  }`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setShowingBefore(!showingBefore);
+                  }}
+                  aria-pressed={showingBefore}
+                >
+                  hold b to see it unedited
+                </button>
+              ) : null
+            }
           />
-          <PhotoMetaRow photo={props.image} />
           <PhotoGearLine photo={props.image} />
         </div>
       )}

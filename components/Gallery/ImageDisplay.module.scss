@@ -21,6 +21,7 @@
 .overlay-frame {
   position: relative;
   display: flex;
+  box-sizing: border-box;
   max-width: 90%;
   max-height: 90%;
   padding: 10px;

@@ -12,6 +12,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { ArrowLeft, ArrowRight } from "react-feather";
 import ViewModeHandler from "../components/Gallery/ViewModeHandler";
+import ViewControls from "../components/Gallery/ViewControls";
+import PhotoColumn from "../components/Gallery/PhotoColumn";
 import { getGalleryPhotos } from "../util/db/photos";
 
 // short and URL-safe: it only has to differ between visits
@@ -83,66 +85,20 @@ export default async function PhotographyGallery({ searchParams }) {
             {/* Controls Section */}
             <div className={styles["controls-section"]}>
               <FilterControls selectedTiers={selectedTiers} />
-              <div
-                className={`${styles["view-controls"]} ${styles["controls-group"]}`}
-              >
-                <div className={styles["controls-label"]}>View</div>
-                <div className={styles["controls-buttons"]}>
-                  {["grid", "column"].map((viewMode) => {
-                    const newSearchParams = new URLSearchParams();
-                    selectedTiers.forEach((tier) =>
-                      newSearchParams.append("photos", tier)
-                    );
-                    newSearchParams.set("view", viewMode);
-
-                    return (
-                      <Link
-                        key={viewMode}
-                        href={`/?${newSearchParams.toString()}`}
-                        className={`${styles["control-button"]} ${
-                          currentView === viewMode ? styles.active : ""
-                        }`}
-                        replace
-                      >
-                        <FontAwesomeIcon
-                          icon={
-                            viewMode === "grid" ? faTableCells : faAlignJustify
-                          }
-                        />{" "}
-                        {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}
-                        {currentView === viewMode && (
-                          <FontAwesomeIcon
-                            icon={faCircle}
-                            className={styles["circle"]}
-                          />
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
+              <ViewControls
+                view={currentView}
+                basePath="/"
+                params={[
+                  ...selectedTiers.map((tier) => ["photos", String(tier)]),
+                  ["seed", seed],
+                  ...(sort !== "shuffle" ? [["sort", sort]] : []),
+                ]}
+              />
             </div>
 
             {/* Gallery Section */}
             {currentView === "column" ? (
-              <div
-                className="photo-grid"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  flexDirection: "column",
-                }}
-              >
-                {photos.map((photo) => (
-                  <div key={photo.id} className={styles["photo-card"]}>
-                    <ImageDisplayFullWidth
-                      image={photo}
-                      key={photo.s3Key}
-                      overlay
-                    />
-                  </div>
-                ))}
-              </div>
+              <PhotoColumn images={photos} />
             ) : (
               <GalleryView images={photos} />
             )}
