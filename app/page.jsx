@@ -1,4 +1,3 @@
-import Head from "next/head";
 import styles from "./page.module.scss";
 import NavigationSidebar from "../components/NavigationSidebar";
 import GalleryView from "../components/Gallery/GalleryView";
@@ -74,12 +73,6 @@ export default async function PhotographyGallery({ searchParams }) {
       <div className={`${styles.home} ${styles.body}`}>
         <NavigationSidebar />
         <div className={styles.all}>
-          <Head>
-            <link
-              href="https://fonts.googleapis.com/css?family=Inter"
-              rel="stylesheet"
-            />
-          </Head>
           <div className={styles.container}>
             <h1 className={styles.title}>Gallery</h1>
             <p className={styles.description}>

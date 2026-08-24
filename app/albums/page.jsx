@@ -19,7 +19,7 @@ const DRIFT_CLASS = {
   e: albumStyles.driftE,
 };
 
-// The shoot date is a DATE column, so it has no time zone. Formatting it with
+// The album date is a DATE column, so it has no time zone. Formatting it with
 // the local one would show the previous day for anyone west of UTC.
 function shootDateParts(shootDate) {
   const value = shootDate instanceof Date ? shootDate : new Date(shootDate);
@@ -44,11 +44,11 @@ export default async function Albums() {
       <div className={styles.all}>
         <div className={styles.container}>
           <h1 className={styles.title}>Albums</h1>
-          <p className={styles.description}>Every shoot, newest first.</p>
+          <p className={styles.description}>Every album, newest first.</p>
 
           {albums.length === 0 && (
             <div className={albumStyles.empty}>
-              No shoots yet. Photos get grouped into one once they have a shoot.
+              No albums yet. Photos get grouped into one once they have a album.
             </div>
           )}
 

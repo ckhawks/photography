@@ -5,7 +5,7 @@ import Link from "next/link";
 import "inter-ui/inter.css";
 import { Eye, EyeOff, FileText, Trash2 } from "react-feather";
 import styles from "../../page.module.scss";
-import shootStyles from "./shoots.module.scss";
+import albumStyles from "./albums.module.scss";
 import NavigationSidebar from "../../../components/NavigationSidebar";
 import Unauthorized from "../../../components/Unauthorized";
 
@@ -15,8 +15,8 @@ const VISIBILITIES = [
   { value: "draft", label: "Draft", hint: "404 to everyone else", icon: FileText },
 ];
 
-/** Editing a shoot: name it now or name it later, and move it if the date was wrong. */
-function ShootRow({ album, onSave, onDelete }) {
+/** Editing a album: name it now or name it later, and move it if the date was wrong. */
+function AlbumRow({ album, onSave, onDelete }) {
   const [title, setTitle] = useState(album.title);
   const [shootDate, setShootDate] = useState(String(album.shootDate).slice(0, 10));
   const [updateSlug, setUpdateSlug] = useState(false);
@@ -42,25 +42,25 @@ function ShootRow({ album, onSave, onDelete }) {
   };
 
   return (
-    <div className={shootStyles.row}>
-      <div className={shootStyles.fields}>
+    <div className={albumStyles.row}>
+      <div className={albumStyles.fields}>
         <input
-          className={shootStyles.title}
+          className={albumStyles.title}
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          placeholder="Shoot title"
-          aria-label="Shoot title"
+          placeholder="Album title"
+          aria-label="Album title"
         />
         <input
-          className={shootStyles.date}
+          className={albumStyles.date}
           type="date"
           value={shootDate}
           onChange={(event) => setShootDate(event.target.value)}
-          aria-label="Shoot date"
+          aria-label="Album date"
         />
         <button
           type="button"
-          className={shootStyles.save}
+          className={albumStyles.save}
           disabled={!dirty}
           onClick={() => save({ title, shootDate, updateSlug })}
         >
@@ -68,15 +68,15 @@ function ShootRow({ album, onSave, onDelete }) {
         </button>
       </div>
 
-      <div className={shootStyles.meta}>
-        <Link href={`/albums/${album.slug}`} className={shootStyles.slug}>
+      <div className={albumStyles.meta}>
+        <Link href={`/albums/${album.slug}`} className={albumStyles.slug}>
           /albums/{album.slug}
         </Link>
-        <span className={shootStyles.count}>
+        <span className={albumStyles.count}>
           {album.photoCount} {album.photoCount === 1 ? "photo" : "photos"}
         </span>
 
-        <label className={shootStyles.slugToggle}>
+        <label className={albumStyles.slugToggle}>
           <input
             type="checkbox"
             checked={updateSlug}
@@ -85,7 +85,7 @@ function ShootRow({ album, onSave, onDelete }) {
           rebuild the link from the new name
         </label>
 
-        <div className={shootStyles.visibility}>
+        <div className={albumStyles.visibility}>
           {VISIBILITIES.map((option) => {
             const Icon = option.icon;
             return (
@@ -93,7 +93,7 @@ function ShootRow({ album, onSave, onDelete }) {
                 type="button"
                 key={option.value}
                 title={option.hint}
-                className={`${shootStyles.visButton} ${album.visibility === option.value ? shootStyles.active : ""}`}
+                className={`${albumStyles.visButton} ${album.visibility === option.value ? albumStyles.active : ""}`}
                 onClick={() => save({ visibility: option.value })}
               >
                 <Icon size={13} />
@@ -103,7 +103,7 @@ function ShootRow({ album, onSave, onDelete }) {
           })}
         </div>
 
-        <label className={shootStyles.cullToggle} title="Show the unedited frames on this shoot's page">
+        <label className={albumStyles.cullToggle} title="Show the unedited frames on this album's page">
           <input
             type="checkbox"
             checked={Boolean(album.showCull)}
@@ -115,21 +115,21 @@ function ShootRow({ album, onSave, onDelete }) {
         {album.photoCount === 0 && (
           <button
             type="button"
-            className={shootStyles.delete}
+            className={albumStyles.delete}
             onClick={() => onDelete(album.id)}
-            title="Delete this empty shoot"
+            title="Delete this empty album"
           >
             <Trash2 size={13} />
           </button>
         )}
 
-        {status && <span className={shootStyles.status}>{status}</span>}
+        {status && <span className={albumStyles.status}>{status}</span>}
       </div>
     </div>
   );
 }
 
-export default function Shoots() {
+export default function Albums() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [albums, setAlbums] = useState([]);
   const [error, setError] = useState(null);
@@ -190,7 +190,7 @@ export default function Shoots() {
   };
 
   const remove = async (id) => {
-    if (!confirm("Delete this shoot?")) return;
+    if (!confirm("Delete this album?")) return;
     setError(null);
     try {
       const res = await fetch("/api/admin/albums", {
@@ -211,47 +211,47 @@ export default function Shoots() {
       <NavigationSidebar />
       <div className={styles.all}>
         <div className={styles.container}>
-          <h1 className={styles.title}>Shoots</h1>
+          <h1 className={styles.title}>Albums</h1>
           <p className={styles.description}>
             Rename them, move their dates, decide who can see them. Names can wait until
             after the photos are in.
           </p>
 
-          {error && <p className={shootStyles.error}>{error}</p>}
+          {error && <p className={albumStyles.error}>{error}</p>}
 
-          <div className={shootStyles.create}>
+          <div className={albumStyles.create}>
             <input
-              className={shootStyles.date}
+              className={albumStyles.date}
               type="date"
               value={shootDate}
               onChange={(event) => setShootDate(event.target.value)}
-              aria-label="New shoot date"
+              aria-label="New album date"
             />
             <input
-              className={shootStyles.title}
-              placeholder="New shoot title"
+              className={albumStyles.title}
+              placeholder="New album title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               onKeyDown={(event) => event.key === "Enter" && create()}
             />
             <button
               type="button"
-              className={shootStyles.createButton}
+              className={albumStyles.createButton}
               onClick={create}
               disabled={!title.trim() || !shootDate}
             >
-              Add shoot
+              Add album
             </button>
           </div>
 
-          <div className={shootStyles.rows}>
+          <div className={albumStyles.rows}>
             {albums.map((album) => (
-              <ShootRow key={album.id} album={album} onSave={save} onDelete={remove} />
+              <AlbumRow key={album.id} album={album} onSave={save} onDelete={remove} />
             ))}
           </div>
 
           {albums.length === 0 && (
-            <p className={shootStyles.empty}>No shoots yet.</p>
+            <p className={albumStyles.empty}>No albums yet.</p>
           )}
         </div>
       </div>

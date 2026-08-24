@@ -20,8 +20,8 @@ export const PREVIEW_COUNT = 5;
 const PUBLIC_VISIBILITY = ["public", "unlisted"];
 
 /**
- * Shoots for the Albums page, newest first, each with a handful of photos for
- * its pile. Draft shoots never appear; unlisted ones are reachable by link but
+ * Albums for the Albums page, newest first, each with a handful of photos for
+ * its pile. Draft albums never appear; unlisted ones are reachable by link but
  * are not listed here either.
  */
 export async function getAlbumsWithPreviews(): Promise<AlbumWithPreview[]> {
@@ -37,7 +37,7 @@ export async function getAlbumsWithPreviews(): Promise<AlbumWithPreview[]> {
 
   if (!albums.length) return [];
 
-  // one query for every pile rather than one per shoot
+  // one query for every pile rather than one per album
   const preview = await db<PhotoRow & { albumId: number }>(
     `SELECT "id", "albumId", "s3Key", "thumbKey", "originalFilename", "createdAt", "tier", "width", "height"
        FROM (
@@ -64,7 +64,7 @@ export async function getAlbumsWithPreviews(): Promise<AlbumWithPreview[]> {
 }
 
 /**
- * One shoot and its photos. Draft shoots return null so the page 404s; unlisted
+ * One album and its photos. Draft albums return null so the page 404s; unlisted
  * ones resolve, which is what makes a link shareable without listing it.
  */
 export type AlbumSort = "best" | "chronological";
@@ -102,7 +102,7 @@ export async function getAlbumBySlug(slug: string, sort: AlbumSort = "best") {
         [`COALESCE(p."takenAt", p."createdAt") ASC, p."id" ASC`, [album.id]]
       : // best first, and shuffled inside each band, because frame order is
         // the order the film came out of the camera rather than an argument
-        // about which is better. Seeded on the album so the shoot looks the
+        // about which is better. Seeded on the album so the album looks the
         // same on every visit instead of rearranging under the viewer.
         [
           `p."tier" DESC NULLS LAST,

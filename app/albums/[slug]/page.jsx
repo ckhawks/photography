@@ -33,7 +33,7 @@ export default async function Album({ params, searchParams }) {
     result = await getAlbumBySlug(slug, sort);
   } catch (error) {
     console.error("Failed to load album:", error);
-    return <p className="error-message">Failed to load this shoot</p>;
+    return <p className="error-message">Failed to load this album</p>;
   }
 
   if (!result) notFound();
@@ -90,7 +90,7 @@ export default async function Album({ params, searchParams }) {
           )}
 
           {photos.length === 0 && more.length === 0 ? (
-            <p className={albumStyles.empty}>No photos in this shoot yet.</p>
+            <p className={albumStyles.empty}>No photos in this album yet.</p>
           ) : (
             <GalleryView images={photos} />
           )}
@@ -101,12 +101,11 @@ export default async function Album({ params, searchParams }) {
               <summary className={albumStyles.moreSummary}>
                 <span>Want more?</span>
                 <span className={albumStyles.moreCount}>
-                  {more.length} more from this shoot
+                  {more.length} more from this album
                 </span>
               </summary>
               <p className={albumStyles.moreNote}>
-                These are usually unedited &mdash; scans kept for completeness rather than
-                worked on.
+                The weaker ones &mdash; here if you want to see everything.
               </p>
               <GalleryView images={more} />
             </details>

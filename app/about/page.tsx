@@ -1,4 +1,3 @@
-import Head from "next/head";
 import React from "react";
 
 import "inter-ui/inter.css";
@@ -24,12 +23,6 @@ const AboutPage = async () => {
     <div className={`${styles.home} ${styles.body}`}>
       <NavigationSidebar />
       <div className={styles.all}>
-        <Head>
-          <link
-            href="https://fonts.googleapis.com/css?family=Inter"
-            rel="stylesheet"
-          />
-        </Head>
         <div className={styles.container}>
           <h1 className={styles.title}>About</h1>
           <p className={styles.description}>Who am I?</p>

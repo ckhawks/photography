@@ -17,7 +17,7 @@ function slugFor(shootDate: string, title: string) {
   return `${shootDate}-${name}` || shootDate;
 }
 
-/** Every shoot, for the picker in Manage. Drafts included: this is admin-only. */
+/** Every album, for the picker in Manage. Drafts included: this is admin-only. */
 export async function GET(req: Request) {
   if (!authorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -35,12 +35,12 @@ export async function GET(req: Request) {
     return NextResponse.json({ albums });
   } catch (error) {
     console.error("Error loading albums:", error);
-    return NextResponse.json({ error: "Failed to load shoots" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load albums" }, { status: 500 });
   }
 }
 
 /**
- * Rename a shoot, move its date, or change how visible it is.
+ * Rename a album, move its date, or change how visible it is.
  *
  * The slug is left alone unless asked: it is the link, and a shared link that
  * stops working is worse than a link whose words are out of date. Pass
@@ -54,7 +54,7 @@ export async function PATCH(req: Request) {
   try {
     const { id, title, shootDate, visibility, showCull, updateSlug } = await req.json();
 
-    if (!id) return NextResponse.json({ error: "Missing shoot id" }, { status: 400 });
+    if (!id) return NextResponse.json({ error: "Missing album id" }, { status: 400 });
 
     if (title !== undefined && (typeof title !== "string" || !title.trim())) {
       return NextResponse.json({ error: "A title is required" }, { status: 400 });
@@ -70,7 +70,7 @@ export async function PATCH(req: Request) {
       `SELECT "title", "shootDate"::text, "slug" FROM "Album" WHERE "id" = $1`,
       [id]
     );
-    if (!existing) return NextResponse.json({ error: "No such shoot" }, { status: 404 });
+    if (!existing) return NextResponse.json({ error: "No such album" }, { status: 404 });
 
     const updates: { column: string; value: unknown }[] = [];
     if (title !== undefined) updates.push({ column: "title", value: title.trim() });
@@ -83,7 +83,7 @@ export async function PATCH(req: Request) {
       const clash = await db(`SELECT "id" FROM "Album" WHERE "slug" = $1 AND "id" <> $2`, [slug, id]);
       if (clash.length) {
         return NextResponse.json(
-          { error: "Another shoot already has that link" },
+          { error: "Another album already has that link" },
           { status: 409 }
         );
       }
@@ -105,12 +105,12 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ album });
   } catch (error) {
-    console.error("Error updating shoot:", error);
-    return NextResponse.json({ error: "Failed to update shoot" }, { status: 500 });
+    console.error("Error updating album:", error);
+    return NextResponse.json({ error: "Failed to update album" }, { status: 500 });
   }
 }
 
-/** Delete a shoot. Only an empty one: photos are never removed by this. */
+/** Delete a album. Only an empty one: photos are never removed by this. */
 export async function DELETE(req: Request) {
   if (!authorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -118,7 +118,7 @@ export async function DELETE(req: Request) {
 
   try {
     const { id } = await req.json();
-    if (!id) return NextResponse.json({ error: "Missing shoot id" }, { status: 400 });
+    if (!id) return NextResponse.json({ error: "Missing album id" }, { status: 400 });
 
     const [{ count }] = await db<{ count: string }>(
       `SELECT COUNT(*) FROM "Photo" WHERE "albumId" = $1`,
@@ -126,7 +126,7 @@ export async function DELETE(req: Request) {
     );
     if (Number(count) > 0) {
       return NextResponse.json(
-        { error: `That shoot still holds ${count} photos. Move them out first.` },
+        { error: `That album still holds ${count} photos. Move them out first.` },
         { status: 409 }
       );
     }
@@ -134,12 +134,12 @@ export async function DELETE(req: Request) {
     await db(`DELETE FROM "Album" WHERE "id" = $1`, [id]);
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Error deleting shoot:", error);
-    return NextResponse.json({ error: "Failed to delete shoot" }, { status: 500 });
+    console.error("Error deleting album:", error);
+    return NextResponse.json({ error: "Failed to delete album" }, { status: 500 });
   }
 }
 
-/** Create a shoot. A date and a title is all there is to fill in. */
+/** Create a album. A date and a title is all there is to fill in. */
 export async function POST(req: Request) {
   if (!authorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -153,7 +153,7 @@ export async function POST(req: Request) {
     }
     if (typeof shootDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(shootDate)) {
       return NextResponse.json(
-        { error: "A shoot date is required, as YYYY-MM-DD" },
+        { error: "A album date is required, as YYYY-MM-DD" },
         { status: 400 }
       );
     }
@@ -166,7 +166,7 @@ export async function POST(req: Request) {
     const existing = await db(`SELECT "id" FROM "Album" WHERE "slug" = $1`, [slug]);
     if (existing.length) {
       return NextResponse.json(
-        { error: "A shoot with that date and title already exists" },
+        { error: "A album with that date and title already exists" },
         { status: 409 }
       );
     }
@@ -180,7 +180,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ album: { ...album, photoCount: 0 } });
   } catch (error) {
-    console.error("Error creating shoot:", error);
-    return NextResponse.json({ error: "Failed to create shoot" }, { status: 500 });
+    console.error("Error creating album:", error);
+    return NextResponse.json({ error: "Failed to create album" }, { status: 500 });
   }
 }

@@ -95,12 +95,12 @@ const NavigationSidebar = (props) => {
         {isAuthenticated && (
           <div style={{ display: "inline-block", width: "fit-content" }}>
             <Link
-              href={"/admin/shoots"}
+              href={"/admin/albums"}
               className={`${"external-link"} ${sideBarStyles.footerlink} ${
-                pathname === "/admin/shoots" ? sideBarStyles.active : ""
+                pathname === "/admin/albums" ? sideBarStyles.active : ""
               }`}
             >
-              Shoots
+              Albums
             </Link>
           </div>
         )}

@@ -11,7 +11,7 @@ import Unauthorized from "../../../components/Unauthorized";
 import { formatRelativeTimestamp } from "../../../util/date";
 import { thumbnailUrl } from "../../../constants/images";
 import PhotoGearEditor from "../../../components/PhotoGearEditor";
-import ShootPicker from "../../../components/ShootPicker";
+import AlbumPicker from "../../../components/AlbumPicker";
 import { normalizeCamera, normalizeLens } from "../../../util/images/normalizeGear";
 import { RATINGS, ratingById } from "../../../constants/ratings";
 
@@ -81,17 +81,17 @@ const PhotoManagement = () => {
     fetch("/api/admin/albums")
       .then((res) => (res.ok ? res.json() : { albums: [] }))
       .then((data) => setAlbums(data.albums ?? []))
-      .catch((err) => console.error("Failed to load shoots:", err));
+      .catch((err) => console.error("Failed to load albums:", err));
   }, [isAuthenticated]);
 
-  const createShoot = async (shoot) => {
+  const createAlbum = async (album) => {
     const res = await fetch("/api/admin/albums", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(shoot),
+      body: JSON.stringify(album),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to create shoot");
+    if (!res.ok) throw new Error(data.error || "Failed to create album");
     setAlbums((prev) =>
       [...prev, data.album].sort((a, b) => String(b.shootDate).localeCompare(String(a.shootDate)))
     );
@@ -229,10 +229,10 @@ const PhotoManagement = () => {
               className={adminStyles.filterSelect}
               value={albumFilter}
               onChange={(event) => setAlbumFilter(event.target.value)}
-              aria-label="Shoot"
+              aria-label="Album"
             >
-              <option value="">Any shoot</option>
-              <option value="none">No shoot</option>
+              <option value="">Any album</option>
+              <option value="none">No album</option>
               {albums.map((album) => (
                 <option value={album.id} key={album.id}>
                   {album.title} ({album.photoCount})
@@ -322,7 +322,7 @@ const PhotoManagement = () => {
                   <option value="" disabled>
                     File into...
                   </option>
-                  <option value="none">No shoot</option>
+                  <option value="none">No album</option>
                   {albums.map((album) => (
                     <option value={album.id} key={album.id}>
                       {album.title}
@@ -379,7 +379,7 @@ const PhotoManagement = () => {
                   <div className={adminStyles.tileBar}>
                     <span className={adminStyles.tileName}>
                       {rating?.label ?? "unrated"}
-                      {photo.albumTitle ? ` · ${photo.albumTitle}` : " · no shoot"}
+                      {photo.albumTitle ? ` · ${photo.albumTitle}` : " · no album"}
                     </span>
                     <button
                       type="button"
@@ -458,11 +458,11 @@ const PhotoManagement = () => {
               ))}
             </select>
 
-            <ShootPicker
+            <AlbumPicker
               albums={albums}
               value={editingPhoto.albumId}
               onAssign={(albumId) => updatePhoto(editingPhoto.id, { albumId })}
-              onCreate={createShoot}
+              onCreate={createAlbum}
             />
 
             <PhotoGearEditor photo={editingPhoto} onSave={updatePhoto} />

@@ -1,18 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import styles from "./ShootPicker.module.scss";
+import styles from "./AlbumPicker.module.scss";
 
-const NEW_SHOOT = "__new__";
+const NEW_ALBUM = "__new__";
 
 /**
- * Which shoot a photo belongs to.
+ * Which album a photo belongs to.
  *
- * Choosing "New shoot" opens two fields, because a shoot is only ever a date
+ * Choosing "New album" opens two fields, because a album is only ever a date
  * and a title. The photo is filed into it as soon as it is created, so adding
- * a shoot and assigning to it is one action rather than two.
+ * a album and assigning to it is one action rather than two.
  */
-export default function ShootPicker({ albums, value, onAssign, onCreate }) {
+export default function AlbumPicker({ albums, value, onAssign, onCreate }) {
   const [creating, setCreating] = useState(false);
   const [title, setTitle] = useState("");
   const [shootDate, setShootDate] = useState("");
@@ -34,7 +34,7 @@ export default function ShootPicker({ albums, value, onAssign, onCreate }) {
       setTitle("");
       setShootDate("");
     } catch (problem) {
-      setError(problem.message || "Could not create the shoot");
+      setError(problem.message || "Could not create the album");
     } finally {
       setBusy(false);
     }
@@ -48,15 +48,15 @@ export default function ShootPicker({ albums, value, onAssign, onCreate }) {
           type="date"
           value={shootDate}
           onChange={(event) => setShootDate(event.target.value)}
-          aria-label="Shoot date"
+          aria-label="Album date"
         />
         <input
           className={styles.input}
-          placeholder="Shoot title"
+          placeholder="Album title"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           onKeyDown={(event) => event.key === "Enter" && create()}
-          aria-label="Shoot title"
+          aria-label="Album title"
         />
         <div className={styles.creatorButtons}>
           <button type="button" className={styles.primary} onClick={create} disabled={busy}>
@@ -83,21 +83,21 @@ export default function ShootPicker({ albums, value, onAssign, onCreate }) {
       className={styles.select}
       value={value ?? ""}
       onChange={(event) => {
-        if (event.target.value === NEW_SHOOT) {
+        if (event.target.value === NEW_ALBUM) {
           setCreating(true);
           return;
         }
         onAssign(event.target.value === "" ? null : Number(event.target.value));
       }}
-      aria-label="Shoot"
+      aria-label="Album"
     >
-      <option value="">No shoot</option>
+      <option value="">No album</option>
       {albums.map((album) => (
         <option value={album.id} key={album.id}>
           {album.title} · {String(album.shootDate).slice(0, 10)}
         </option>
       ))}
-      <option value={NEW_SHOOT}>New shoot...</option>
+      <option value={NEW_ALBUM}>New album...</option>
     </select>
   );
 }

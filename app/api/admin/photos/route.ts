@@ -136,7 +136,7 @@ export async function PATCH(req: Request) {
     if (camera !== undefined) updates.push({ column: "camera", value: text(camera) });
     if (lens !== undefined) updates.push({ column: "lens", value: text(lens) });
     if (filmStock !== undefined) updates.push({ column: "filmStock", value: text(filmStock) });
-    // null clears the shoot, which is how a photo goes back to being unfiled
+    // null clears the album, which is how a photo goes back to being unfiled
     if (albumId !== undefined) {
       updates.push({ column: "albumId", value: albumId === null || albumId === "" ? null : Number(albumId) });
     }

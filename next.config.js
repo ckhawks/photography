@@ -24,7 +24,9 @@ module.exports = {
   async redirects() {
     return [
       { source: "/manage", destination: "/admin/photos", permanent: false },
-      { source: "/shoots", destination: "/admin/shoots", permanent: false },
+      { source: "/shoots", destination: "/admin/albums", permanent: false },
+      // renamed 2026-08-23: an album can span several days, so "shoot" was wrong
+      { source: "/admin/shoots", destination: "/admin/albums", permanent: false },
       { source: "/upload", destination: "/admin/upload", permanent: false },
     ];
   },

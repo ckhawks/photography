@@ -77,7 +77,7 @@ export async function POST(req: Request) {
     }
 
     if (albumId !== null && !Number.isInteger(albumId)) {
-      return NextResponse.json({ error: "Invalid shoot" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid album" }, { status: 400 });
     }
 
     const uploadedPhotos = [];

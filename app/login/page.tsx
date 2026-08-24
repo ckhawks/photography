@@ -5,7 +5,6 @@ import { useState } from "react";
 import styles from "../page.module.scss";
 import { useRouter } from "next/navigation";
 import { Button, Col, Form, Row } from "react-bootstrap";
-import Head from "next/head";
 import NavigationSidebar from "../../components/NavigationSidebar";
 
 const LoginPage = () => {
@@ -36,12 +35,6 @@ const LoginPage = () => {
     <div className={`${styles.home} ${styles.body}`}>
       <NavigationSidebar />
       <div className={styles.all}>
-        <Head>
-          <link
-            href="https://fonts.googleapis.com/css?family=Inter"
-            rel="stylesheet"
-          />
-        </Head>
         <div className={styles.container}>
           <div className={styles.main}>
             <h1>Login</h1>

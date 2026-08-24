@@ -7,7 +7,7 @@ import styles from "../../page.module.scss";
 import uploadStyles from "./upload.module.scss";
 import NavigationSidebar from "../../../components/NavigationSidebar";
 import Unauthorized from "../../../components/Unauthorized";
-import ShootPicker from "../../../components/ShootPicker";
+import AlbumPicker from "../../../components/AlbumPicker";
 import { RATINGS, ratingById } from "../../../constants/ratings";
 
 // Files go up one request each rather than in a single form post: a 250-frame
@@ -59,7 +59,7 @@ export default function UploadPhotos() {
     fetch("/api/admin/albums")
       .then((res) => (res.ok ? res.json() : { albums: [] }))
       .then((data) => setAlbums(data.albums ?? []))
-      .catch((error) => console.error("Failed to load shoots:", error));
+      .catch((error) => console.error("Failed to load albums:", error));
   }, [isAuthenticated]);
 
   // object URLs are cheap but not free; let them go when the queue is emptied
@@ -122,21 +122,21 @@ export default function UploadPhotos() {
     await Promise.all(workers);
 
     setRunning(false);
-    // shoots gain photos as the run goes, so the counts in the picker are stale
+    // albums gain photos as the run goes, so the counts in the picker are stale
     fetch("/api/admin/albums")
       .then((res) => (res.ok ? res.json() : { albums }))
       .then((data) => setAlbums(data.albums ?? albums))
       .catch(() => {});
   };
 
-  const createShoot = async (shoot) => {
+  const createAlbum = async (album) => {
     const res = await fetch("/api/admin/albums", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(shoot),
+      body: JSON.stringify(album),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to create shoot");
+    if (!res.ok) throw new Error(data.error || "Failed to create album");
     setAlbums((prev) =>
       [...prev, data.album].sort((a, b) => String(b.shootDate).localeCompare(String(a.shootDate)))
     );
@@ -164,15 +164,15 @@ export default function UploadPhotos() {
           <div className={uploadStyles.layout}>
             <div className={uploadStyles.settings}>
               <div className={uploadStyles.panel}>
-                <div className={uploadStyles.panelLabel}>Shoot</div>
-                <ShootPicker
+                <div className={uploadStyles.panelLabel}>Album</div>
+                <AlbumPicker
                   albums={albums}
                   value={albumId}
                   onAssign={(id) => setAlbumId(id)}
-                  onCreate={createShoot}
+                  onCreate={createAlbum}
                 />
                 <p className={uploadStyles.hint}>
-                  Everything in this batch is filed here. Leave it on no shoot to file later.
+                  Everything in this batch is filed here. Leave it on no album to file later.
                 </p>
               </div>
 
