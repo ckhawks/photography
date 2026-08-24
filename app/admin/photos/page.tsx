@@ -35,6 +35,8 @@ const PhotoManagement = () => {
   const [ratingFilter, setRatingFilter] = useState("");
 
   const [selected, setSelected] = useState(() => new Set<number>());
+  const [replacing, setReplacing] = useState(false);
+  const [keepAsBefore, setKeepAsBefore] = useState(true);
   const [editing, setEditing] = useState<number | null>(null);
 
   useEffect(() => {
@@ -119,6 +121,33 @@ const PhotoManagement = () => {
           : photo
       )
     );
+  };
+
+  /**
+   * Swap the image behind a photo without losing the row. The outgoing image
+   * becomes the before by default: this exists for publishing an edit of a
+   * frame that went up unedited, which is exactly a before/after pair.
+   */
+  const replaceImage = async (id, file, keepAsBefore) => {
+    setReplacing(true);
+    try {
+      const body = new FormData();
+      body.append("photoId", String(id));
+      body.append("file", file);
+      body.append("keepAsBefore", keepAsBefore ? "true" : "false");
+
+      const res = await fetch("/api/admin/version", { method: "POST", body });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to replace the image");
+
+      setPhotos((prev) =>
+        prev.map((photo) => (photo.id === id ? { ...photo, ...data.photo } : photo))
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setReplacing(false);
+    }
   };
 
   const updateSelected = async (changes) => {
@@ -482,6 +511,33 @@ const PhotoManagement = () => {
               ]
                 .filter(Boolean)
                 .join(" · ")}
+            </div>
+
+            <div className={adminStyles.panelReplace}>
+              <label className={adminStyles.panelReplaceButton}>
+                <Upload size={14} />
+                {replacing ? "Replacing..." : "Upload a new version"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={replacing}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    // the input keeps its value, so re-picking the same file
+                    // after a failure would not fire change again
+                    event.target.value = "";
+                    if (file) replaceImage(editingPhoto.id, file, keepAsBefore);
+                  }}
+                />
+              </label>
+              <label className={adminStyles.panelReplaceOption}>
+                <input
+                  type="checkbox"
+                  checked={keepAsBefore}
+                  onChange={(event) => setKeepAsBefore(event.target.checked)}
+                />
+                Keep the current image as the before
+              </label>
             </div>
 
             <button

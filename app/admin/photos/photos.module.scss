@@ -414,6 +414,47 @@
   color: rgb(160, 160, 160);
 }
 
+.panelReplace {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+// a label wrapping a hidden input, because a bare file input cannot be styled
+// and its "No file chosen" text says nothing useful here
+.panelReplaceButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgb(226, 226, 226);
+  border-radius: 6px;
+  background: #ffffff;
+  color: #171717;
+  padding: 9px;
+  font-size: 13px;
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+
+  &:hover {
+    border-color: rgb(180, 180, 180);
+  }
+
+  input {
+    display: none;
+  }
+}
+
+.panelReplaceOption {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgb(120, 120, 120);
+  cursor: pointer;
+}
+
 .panelDelete {
   display: flex;
   align-items: center;
