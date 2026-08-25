@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "react-bootstrap";
 import { Heart } from "react-feather";
 import { getVisitorId } from "../util/fingerprint";
 
@@ -79,7 +78,8 @@ export default function LikeButton({ photoId, initialLikes }) {
   };
 
   return (
-    <Button
+    <button
+      type="button"
       onClick={toggleLike}
       className={`${styles["button-secondary"]} ${localStyles["wrapper"]} ${
         activated ? localStyles["activated"] : ""
@@ -91,6 +91,6 @@ export default function LikeButton({ photoId, initialLikes }) {
         className={`${localStyles["icon"]}`}
       />
       {likes}
-    </Button>
+    </button>
   );
 }

@@ -1,4 +1,3 @@
-// import "bootstrap/dist/css/bootstrap.min.css";
 import MobileTopMenubar from "../components/MobileTopMenubar";
 import "./globals.scss";
 
@@ -14,7 +13,6 @@ export const viewport = {
   initialScale: 1,
 };
 
-// import "bootstrap/dist/css/bootstrap.min.css";
 
 export default function RootLayout({ children }) {
   return (

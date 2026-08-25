@@ -4,7 +4,6 @@ import React from "react";
 import { useState } from "react";
 import styles from "../page.module.scss";
 import { useRouter } from "next/navigation";
-import { Button, Col, Form, Row } from "react-bootstrap";
 import NavigationSidebar from "../../components/NavigationSidebar";
 
 const LoginPage = () => {
@@ -38,25 +37,25 @@ const LoginPage = () => {
         <div className={styles.container}>
           <div className={styles.main}>
             <h1>Login</h1>
-            <Form onSubmit={handleSubmit}>
-              <Row style={{ maxWidth: "500px" }}>
-                <Col>
-                  <Form.Control
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter password"
-                    style={{ maxWidth: "300px" }}
-                  />
-                </Col>
-                <Col>
-                  <Button variant="primary" type="submit">
-                    Login
-                  </Button>
-                </Col>
-              </Row>
+            {/*
+              Plain elements. These were react-bootstrap's Form, Row, Col and
+              Button, but bootstrap's stylesheet is commented out in globals
+              and layout, so they only ever rendered as divs with classes
+              nothing defines.
+            */}
+            <form onSubmit={handleSubmit}>
+              <div style={{ display: "flex", gap: "0.5rem", maxWidth: "500px" }}>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password"
+                  style={{ maxWidth: "300px", flex: 1 }}
+                />
+                <button type="submit">Login</button>
+              </div>
               {error && <p>{error}</p>}
-            </Form>
+            </form>
           </div>
         </div>
       </div>
