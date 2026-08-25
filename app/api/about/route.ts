@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getTierCounts } from "../../../util/db/counts";
 
-/** 🔢 GET: Photo counts per tier */
+/** GET: photo counts per tier */
 export async function GET() {
   try {
     return NextResponse.json(await getTierCounts());

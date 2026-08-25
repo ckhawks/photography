@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { mediumFromParam } from "../../../constants/mediums";
 import { getGalleryPhotos } from "../../../util/db/photos";
 
-/** 📸 GET: Fetch paginated photos */
+/** GET: one page of the gallery */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);

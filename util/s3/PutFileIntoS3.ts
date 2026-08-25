@@ -2,30 +2,23 @@ import { PutObjectCommand, PutObjectCommandInput } from "@aws-sdk/client-s3";
 import { File } from "buffer";
 import getS3Client from "./GetS3Client";
 
-export async function PutFileIntoS3(file: File, key: String) {
-  // get s3Client to use for the request
+export async function PutFileIntoS3(file: File, key: string) {
   const s3Client = getS3Client();
   try {
-    // set up our parameters
-    // @ts-ignore
-    const uploadParams = {
-      Bucket: process.env.AWS_S3_BUCKET, // destination bucket
-      Key: key, // what the want the file path to be basically
-      Body: await file.arrayBuffer(), // the file itself
-      ContentType: file.type, // the type of the file (look up MIME types)
-    } as PutObjectCommandInput;
+    // Buffer, not the raw ArrayBuffer. The SDK's Body wants a Uint8Array or a
+    // stream; passing an ArrayBuffer worked, but only because a cast was
+    // hiding the mismatch from the compiler.
+    const uploadParams: PutObjectCommandInput = {
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: key,
+      Body: Buffer.from(await file.arrayBuffer()),
+      ContentType: file.type,
+    };
 
-    // create the request and send it with the client
-    const command = new PutObjectCommand(uploadParams);
-    await s3Client.send(command);
-
-    // return success
+    await s3Client.send(new PutObjectCommand(uploadParams));
     return true;
   } catch (error) {
-    // if we had an error, print it out
     console.error("Error uploading file: ", error);
-
-    // return failure
     return false;
   }
 }

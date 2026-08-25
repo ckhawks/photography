@@ -39,9 +39,8 @@ const LoginPage = () => {
             <h1>Login</h1>
             {/*
               Plain elements. These were react-bootstrap's Form, Row, Col and
-              Button, but bootstrap's stylesheet is commented out in globals
-              and layout, so they only ever rendered as divs with classes
-              nothing defines.
+              Button, but bootstrap's stylesheet was never actually loaded, so
+              they only ever rendered as elements with classes nothing defines.
             */}
             <form onSubmit={handleSubmit}>
               <div style={{ display: "flex", gap: "0.5rem", maxWidth: "500px" }}>

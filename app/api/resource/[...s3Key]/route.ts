@@ -4,15 +4,15 @@ import getS3Client from "../../../../util/s3/GetS3Client";
 
 export async function GET(
   request: Request,
-  context: { params: Promise<{ s3Key?: string | string[] }> } // ✅ `params` must be awaited
+  context: { params: Promise<{ s3Key?: string | string[] }> } // `params` must be awaited
 ) {
-  const { s3Key } = await context.params; // ✅ Await params before accessing it
+  const { s3Key } = await context.params; // await params before accessing it
 
   if (!s3Key) {
     return new NextResponse("Missing S3 key", { status: 400 });
   }
 
-  // ✅ Handle both single and catch-all routes
+  // handle both single and catch-all routes
   const objectPath = Array.isArray(s3Key) ? s3Key.join("/") : s3Key;
 
   try {

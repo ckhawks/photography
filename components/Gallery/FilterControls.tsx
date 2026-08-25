@@ -17,10 +17,10 @@ export default function FilterControls({ selectedTiers }) {
       currentTiers.add(tier);
     }
 
-    // ✅ Build new URL params, but **remove `page`** to reset it to `1`
+    // build new URL params, dropping page so the filter starts at page 1
     const params = new URLSearchParams(searchParams);
     params.delete("photos"); // Remove all previous tier selections
-    params.delete("page"); // ✅ Reset page to `1` when tiers change
+    params.delete("page"); // a tier change makes page 3 meaningless
 
     // Append selected tiers to the URL
     if (currentTiers.size > 0) {

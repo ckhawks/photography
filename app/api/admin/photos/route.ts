@@ -36,7 +36,7 @@ export async function GET(req: Request) {
   }
 }
 
-/** 🗑 DELETE: Remove a photo */
+/** DELETE: remove a photo */
 export async function DELETE(req: Request) {
   const token = getCookie(req, "auth-token");
 
@@ -83,7 +83,7 @@ export async function DELETE(req: Request) {
   }
 }
 
-/** 🛠️ PATCH: Update photo tier */
+/** PATCH: update a photo's rating, gear or album */
 export async function PATCH(req: Request) {
   const token = getCookie(req, "auth-token");
 
