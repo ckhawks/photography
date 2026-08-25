@@ -116,7 +116,6 @@ export async function POST(req: Request) {
     const fileKey = versionedKey(file.name);
 
     try {
-      // @ts-ignore the helper predates the File type here
       await PutFileIntoS3(file, fileKey);
     } catch (s3Error) {
       console.error("Version upload failed:", s3Error);

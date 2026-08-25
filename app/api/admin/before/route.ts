@@ -53,7 +53,6 @@ export async function POST(req: Request) {
     const fileKey = `before/${photoId}-${sanitizeFilename(file.name)}`;
 
     try {
-      // @ts-ignore the helper predates the File type here
       await PutFileIntoS3(file, fileKey);
     } catch (s3Error) {
       console.error("Before upload failed:", s3Error);

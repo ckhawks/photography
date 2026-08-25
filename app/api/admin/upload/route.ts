@@ -88,7 +88,6 @@ export async function POST(req: Request) {
 
       // Upload the file to S3
       try {
-        // @ts-ignore
         await PutFileIntoS3(file, fileKey);
       } catch (s3Error) {
         console.error("S3 Upload Failed:", s3Error);

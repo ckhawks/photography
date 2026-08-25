@@ -1,8 +1,20 @@
 import { PutObjectCommand, PutObjectCommandInput } from "@aws-sdk/client-s3";
-import { File } from "buffer";
 import getS3Client from "./GetS3Client";
 
-export async function PutFileIntoS3(file: File, key: string) {
+/**
+ * Only the two things actually used, rather than a File type.
+ *
+ * The helper imported File from node:buffer while every caller hands it the web
+ * File out of a FormData. Those are different types, which is what the
+ * @ts-ignore at each call site was suppressing -- three copies of the same
+ * suppression for one wrong parameter type.
+ */
+type UploadableFile = {
+  arrayBuffer(): Promise<ArrayBuffer>;
+  type: string;
+};
+
+export async function PutFileIntoS3(file: UploadableFile, key: string) {
   const s3Client = getS3Client();
   try {
     // Buffer, not the raw ArrayBuffer. The SDK's Body wants a Uint8Array or a
